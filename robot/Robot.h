@@ -99,7 +99,7 @@ private:
   static constexpr size_t MAX_LINE = Radio::MAX_LINE;
 
   int      _seq            = -1;
-  int      _mission        = 0;       // 0 = no mission
+  int      _mission        = 1;       // 0 = no mission
   uint32_t _moveDeadline   = 0;
   bool     _hasDeadline    = false;
   uint32_t _telemetryEvery = DEFAULT_TELEMETRY_MS;
@@ -114,14 +114,14 @@ private:
   // in number order so the phone page can show its button:
   //
   //      static constexpr const char* MISSION_NAMES = "mur,carre";
-  static constexpr const char* MISSION_NAMES = "obstacle";
+  static constexpr const char* MISSION_NAMES = "obstacle,carre,mur";
 
   void mission() {
     switch (_mission) {
       case 0: break;
       case 1: stopAtObstacle(); break;
-
-      // case 2: driveSquare(); break;
+      case 3: followWall(); break;
+      case 2: driveSquare(); break;
 
       default: break;
     }
@@ -137,6 +137,15 @@ private:
     motors.stop();
     _hasDeadline = false;
     sendTelemetry(true);
+  }
+
+  void followWall() {
+    int c = 0;
+    drive(255 - c, 255 + c, 200);
+  }
+
+  void driveSquare() {
+
   }
 
   // Drain all complete lines so a burst does not linger in the input buffer.
