@@ -43,8 +43,8 @@
 #define RADIO_SERIAL  1
 #define RADIO_WIFI    2
 
-// #define RADIO  RADIO_SERIAL
-#define RADIO RADIO_WIFI
+#define RADIO  RADIO_SERIAL
+
 // The camera serves its pictures over HTTP, which needs the network stack
 // that only RADIO_WIFI starts up. CAMERA_ENABLED and RADIO_SERIAL together
 // are refused by ConfigCheck.h rather than misbehaving at run time.
@@ -55,14 +55,14 @@
 //  Join an existing 2.4 GHz network accessible to the phone. For an open
 //  network use nullptr, not "", as WIFI_PASSWORD.
 
-#define WIFI_SSID      "Ti veu wifi ?"
-#define WIFI_PASSWORD  "ui ji veu"
+#define WIFI_SSID      "change-me"
+#define WIFI_PASSWORD  "change-me"
 
 #define HTTP_PORT      80     // the phone page: http://<robot-ip>/
 
 // Shown on the phone page. Use only letters, digits and dashes: the name is
 // inserted into a JSON string without escaping.
-#define ROBOT_NAME     "pobla"
+#define ROBOT_NAME     "robot"
 
 
 // Motors
@@ -91,8 +91,8 @@
 #define RIGHT_MOTOR_PIN_B  27     // L298N IN4
 
 // Reverse a complete side if its motors turn backward.
-#define LEFT_MOTOR_REVERSED   true
-#define RIGHT_MOTOR_REVERSED  true
+#define LEFT_MOTOR_REVERSED   false
+#define RIGHT_MOTOR_REVERSED  false
 
 // Speeds are -255 .. +255; the minimum speed that turns a motor varies.
 #define MOTOR_MAX_SPEED     255

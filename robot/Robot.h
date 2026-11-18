@@ -12,6 +12,13 @@
 #include "Radio.h"
 #include "Json.h"
 
+// Mission settings. These are defaults: a #define of the same name in
+// Config.local.h takes precedence, so tuned values survive a new copy of
+// this file.
+#ifndef OBSTACLE_STOP_MM
+#define OBSTACLE_STOP_MM  150   // mission 1: stop a forward movement this close, in mm
+#endif
+
 /**
  * Robot handles commands, missions, movement deadlines and telemetry.
  * Add autonomous behaviour in mission() below.
@@ -113,17 +120,20 @@ private:
     switch (_mission) {
       case 0: break;
       case 1: stopAtObstacle(); break;
-      // case 1: followWall(); break;
+
       // case 2: driveSquare(); break;
 
       default: break;
     }
   }
 
+  // Mission 1: stop a forward movement when the front sensor reads under
+  // OBSTACLE_STOP_MM. Reversing stays possible, so the robot can back away.
   void stopAtObstacle() {
-    if (!front.valid()) return; // ne pas utiliser une mesure absente
-    if (front.distanceMm() > 150) return;
-    if (motors.left()<=0 || motors.right()<=0) return;
+    if (!front.valid()) return;              // never act on a missing reading
+    if (front.distanceMm() >= OBSTACLE_STOP_MM) return;
+    if (motors.left() <= 0 && motors.right() <= 0) return;
+
     motors.stop();
     _hasDeadline = false;
     sendTelemetry(true);
@@ -284,40 +294,3 @@ private:
     _radio.send(out.finish());
   }
 };
-
-// Try this:
-//
-//  Exercises 1, 3, 4 and 5 are numbered missions. Keep each mission's state
-//  in its own method, and use drive() for movement.
-//
-//   1. Obstacle stop (mission 1). Stop when a valid front reading is below
-//      150 mm and either wheel is moving forward. Why allow reversing?
-//
-//   2. Speed ramp. Move the wheel speeds towards stored targets on a timer.
-//      The loop rate varies, so use nowMs(), not a loop counter.
-//
-//   3. Drive a square (mission 2), with 300 mm sides. Track the current
-//      side or turn and its end time; measure the timing on the real robot.
-//
-//   4. Wall follower (mission 3). Steer away when too close to the wall and
-//      towards it when too far. Then scale the correction with the error
-//      (proportional control). Compare the two trajectories.
-//
-//   5. PID (mission 4). Add D to respond to changes in error, then I to
-//      correct persistent error. Scale both by elapsed time, limit the
-//      integral to prevent windup, and account for integer rounding.
-//      Tune one term at a time and measure the effect on oscillation.
-//
-//   6. Queue commands. A new movement currently replaces the previous one.
-//      Add a queue using commands such as:
-//
-//          {"queue":1,"left":200,"right":200,"duration":1000}
-//          {"queue":1,"left":200,"right":-200,"duration":600}
-//          {"run":1}
-//
-//      Decide whether a new queue command cancels or extends a running queue.
-//      {"stop":true} must clear it. Give each step its own drive() deadline;
-//      report "done" when the queue is empty. Json.h accepts only flat objects,
-//      so an array of steps would require a parser change.
-//
-//   7. With two missions in place, what state or code do they actually share?

@@ -146,14 +146,3 @@ private:
   int  _quality    = -1;
   int  _status     = -1;
 };
-
-// Try this:
-//
-//   1. Hold a sheet of white paper, then something black, at the same
-//      distance. Compare distanceMm() and quality() for the two. Which one
-//      moves, and by how much?
-//   2. Put the ultrasonic ranger and this sensor side by side, facing the
-//      same wall, and turn them away from it a little at a time. Which one
-//      loses the wall first, and why?
-//   3. Add a lastUpdateMs(), as in UltrasonicSensor TRY THIS 2. How often
-//      does a new reading actually arrive? Compare with INTERVAL_MS.

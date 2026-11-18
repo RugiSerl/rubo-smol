@@ -22,7 +22,7 @@ public:
   static const int ROWS    = 2;
 
   // 100 kHz, the speed every I2C device is required to manage. The chip will
-  // do 400 kHz and TRY THIS 3 is about what that buys you.
+  // also do 400 kHz.
   static const uint BUS_HZ = 100 * 1000;
 
   // Long enough that a transfer which is going to work has worked, short
@@ -132,24 +132,3 @@ private:
                                 false, TIMEOUT_US) == 2;
   }
 };
-
-// Try this:
-//
-//   1. Add scroll(int row, const char* text) for a message longer than 16
-//      characters, moving one character left every 300 ms. Remember rule 1
-//      above: on a timer, and never with sleep_ms().
-//   2. The chip has eight slots for characters you draw yourself, eight bytes
-//      each, five bits per row. Add customChar(int slot, const uint8_t* rows)
-//      and put a battery symbol on the screen. Command 0x40 | (slot * 8) sets
-//      where the next data bytes go.
-//   3. Measure claim 2 above. Put a GPIO high in line(), low at the end of it,
-//      and look at the pin. How long IS a refresh, and what happens to it if
-//      you take BUS_HZ to 400 kHz?
-//   4. Robot.h decides what goes on the screen. Change it to show the front
-//      distance as a bar of 16 blocks rather than a number, and decide which
-//      of the two you would rather have while chasing a robot across a room.
-//   5. Make {"display": "hello"} work, so your own program can put text up
-//      there. This is not a Display.h exercise: Json.h stores every value
-//      as a `long` and has nowhere to put a string, so the parser is what you
-//      have to change first. Where does the text live once it is parsed, given
-//      that nothing on this robot allocates memory while it is running?

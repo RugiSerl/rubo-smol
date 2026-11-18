@@ -8,6 +8,9 @@
 
 import { Mission } from './robot.js';
 
+// MEASURE: how long a quarter turn takes at speed 180, on your floor.
+const QUARTER_TURN_MS = 600;
+
 export const missions = {
   /** One step: forward for `duration` ms. */
   avancer: ({ speed = 180, duration = 1000 } = {}) =>
@@ -20,24 +23,28 @@ export const missions = {
       .forward(speed, duration)
       .pause(300)
       .backward(speed, duration),
-};
 
-// Try this:
-//
-//  Add each one to `missions` above, with the name given. Try it against the
-//  fake robot first: it costs a reload, not a reflash.
-//
-//   1. 'avancer-tourner': forward for `duration`, then a quarter turn to the
-//      right. How long is a quarter turn? Measure it on the floor: the fake
-//      robot cannot tell you.
-//
-//   2. 'avancer-obstacle': forward in five steps of `duration`, stopping as
-//      soon as the front sensor reads less than `distance`. Use stopWhen().
-//      Then read your condition again: what does it do when the sensor
-//      reports front_mm: -1?
-//
-//      The fake robot's wall is always about 500 mm away, so set the page's
-//      "arrêt à" slider above 500 to see the stop happen.
-//
-//   3. 'carre': four times (forward, quarter turn), cut short if something
-//      is in the way. repeat() copies every step built so far.
+  // PHONE-1. QUARTER_TURN_MS is measured on the floor, like the robot's own
+  // in Config.h: turn four times and adjust until the robot faces home.
+  'avancer-tourner': ({ speed = 180, duration = 1000 } = {}) =>
+    new Mission('avancer-tourner')
+      .forward(speed, duration)
+      .turnRight(speed, QUARTER_TURN_MS),
+
+  // PHONE-2. front_ok comes first: a failed reading is front_mm: -1, and
+  // -1 < distance would stop the robot every time the sensor misses one.
+  'avancer-obstacle': ({ speed = 160, duration = 1000, distance = 250 } = {}) =>
+    new Mission('avancer-obstacle')
+      .forward(speed, duration)
+      .repeat(5)
+      .stopWhen((t) => t.front_ok && t.front_mm < distance, 'obstacle devant'),
+
+  // PHONE-3. repeat() comes before stopWhen(): it copies steps, and the
+  // condition is not a step.
+  carre: ({ speed = 180, duration = 1200, distance = 200 } = {}) =>
+    new Mission('carre')
+      .forward(speed, duration)
+      .turnRight(speed, QUARTER_TURN_MS)
+      .repeat(4)
+      .stopWhen((t) => t.front_ok && t.front_mm < distance, 'quelque chose devant'),
+};

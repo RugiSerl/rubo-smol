@@ -13,12 +13,14 @@
     --bg: #f6f6f4;  --panel: #fff;      --ink: #1a1a1a;
     --muted: #6b6b6b; --line: #dcdcd8;  --accent: #2f6f4f;
     --warn: #a33;   --warn-bg: #fbeceb;
+    --accent2: #a8620a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #17181a; --panel: #202225; --ink: #e8e8e6;
       --muted: #9a9a97; --line: #34363a; --accent: #6fbf95;
       --warn: #e2726e; --warn-bg: #3a2322;
+      --accent2: #e0a050;
     }
   }
   * { box-sizing: border-box; }
@@ -73,6 +75,19 @@
   .note { color: var(--muted); font-size: .85rem; margin: .7rem 0 0; }
   .dot { width: .7rem; height: .7rem; border-radius: 50%; background: var(--warn); }
   .dot.on { background: var(--accent); }
+  /* WEB-1, WEB-2 */
+  canvas { display: block; width: 100%; height: 140px; margin-top: .4rem;
+           background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+  .legend { font-size: .8rem; color: var(--muted); margin: .8rem 0 0; }
+  .legend b { font-weight: 600; }
+
+  /* WEB-4 */
+  #offline { display: none; margin: 0 0 12px; padding: .9rem; border-radius: 12px;
+             text-align: center; font-size: 1.2rem; font-weight: 700;
+             color: var(--warn); background: var(--warn-bg); border: 2px solid var(--warn); }
+  #offline.show { display: block; }
+  button:disabled { opacity: .35; }
+
   pre { margin: 0; padding: .6rem; background: var(--bg); font-size: .78rem;
         border: 1px solid var(--line); border-radius: 8px; height: 12rem;
         overflow-y: auto; white-space: pre-wrap; color: var(--muted); }
@@ -94,6 +109,8 @@
   <span id="linkText">connexion…</span>
 </header>
 
+<div id="offline"></div>   <!-- WEB-4 -->
+
 <div class="wrap">
 
   <div class="panel">
@@ -111,7 +128,20 @@
     </div>
     <label><span>vitesse</span> <input type="range" id="speed" min="0" max="255" value="180">
       <output id="speedOut"></output></label>
-    <p class="note">Maintenir pour rouler ; relâcher pour arrêter.</p>
+    <label><span>impulsion</span> <input type="checkbox" id="pulse"></label>
+    <label><span>durée</span> <input type="range" id="duration" min="100" max="5000" step="100" value="1000">
+      <output id="durationOut"></output></label>
+    <p class="note">Maintenir pour rouler ; relâcher pour arrêter. En mode
+      impulsion, un appui lance un mouvement de la durée choisie.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Courbes, 10 dernières secondes</h2>
+    <p class="legend" style="margin-top:0"><b style="color:var(--accent)">distance avant</b></p>
+    <canvas id="distanceChart"></canvas>
+    <p class="legend"><b style="color:var(--accent)">requête</b> ·
+      <b style="color:var(--accent2)">commande → télémétrie</b></p>
+    <canvas id="delayChart"></canvas>
   </div>
 
   <div class="panel">
@@ -220,8 +250,17 @@ for (const button of document.querySelectorAll('[data-drive]')) {
 
   button.addEventListener('pointerdown', (event) => {
     event.preventDefault();
-    button.setPointerCapture(event.pointerId);
     abortPhoneMission();
+
+    // WEB-3: one movement per tap, of exactly the chosen duration, and no
+    // stop on release: the robot's own deadline ends it.
+    if ($('pulse').checked) {
+      const speed = Number($('speed').value);
+      bot.drive(l * speed, r * speed, Number($('duration').value));
+      return;
+    }
+
+    button.setPointerCapture(event.pointerId);
     button.classList.add('held');
     go();
     clearInterval(timer);
@@ -233,7 +272,7 @@ for (const button of document.querySelectorAll('[data-drive]')) {
   button.addEventListener('contextmenu', (event) => event.preventDefault());
 }
 
-for (const [slider, suffix] of [['speed', ''], ['mSpeed', ''],
+for (const [slider, suffix] of [['speed', ''], ['duration', ' ms'], ['mSpeed', ''],
                                 ['mDuration', ' ms'], ['mDistance', ' mm']]) {
   const update = () => { $(slider + 'Out').textContent = $(slider).value + suffix; };
   $(slider).addEventListener('input', update);
@@ -318,8 +357,11 @@ bot.on((message) => {
     log('erreur : ' + message.error);
   } else if (message.restarted) {
     log('le robot a redémarré');
+    restartedAt = performance.now();   // WEB-4
     hello();
   } else if (message.ms !== undefined) {
+    // WEB-1: a failed reading is a gap in the curve, not a drop to -1.
+    distances.push({ t: performance.now(), mm: message.front_ok ? message.front_mm : null });
     $('left').textContent = message.left;
     $('right').textContent = message.right;
     $('front').textContent = distance(message.front_mm, message.front_ok);
@@ -332,11 +374,90 @@ bot.on((message) => {
   }
 });
 
+// WEB-1 and WEB-2: plot readings over WINDOW_MS.
+
+const WINDOW_MS = 10000;
+const distances = [];        // { t, mm }, mm null when the reading failed
+const delays = [];           // { t, request, loop }
+
+function forget(list) {
+  const oldest = performance.now() - WINDOW_MS;
+  while (list.length && list[0].t < oldest) list.shift();
+}
+
+// A round top for the scale, so the axis label stays readable: 1000, 1500...
+function scaleFor(list, keys, floor, step) {
+  let top = floor;
+  for (const point of list) for (const key of keys) if (point[key] > top) top = point[key];
+  return Math.ceil(top / step) * step;
+}
+
+function draw(canvas, list, series, top, unit) {
+  const ratio = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * ratio)) {
+    canvas.width = Math.round(w * ratio);
+    canvas.height = Math.round(h * ratio);
+  }
+  const g = canvas.getContext('2d');
+  g.setTransform(ratio, 0, 0, ratio, 0, 0);
+  g.clearRect(0, 0, w, h);
+
+  const css = getComputedStyle(document.documentElement);
+  const now = performance.now();
+  const x = (t) => w - ((now - t) / WINDOW_MS) * w;
+  const y = (v) => h - 4 - (Math.min(v, top) / top) * (h - 8);
+
+  g.fillStyle = css.getPropertyValue('--muted');
+  g.font = '11px system-ui, sans-serif';
+  g.fillText(`${top} ${unit}`, 6, 14);
+
+  for (const { key, color } of series) {
+    g.strokeStyle = css.getPropertyValue(color);
+    g.lineWidth = 2;
+    g.beginPath();
+    let penDown = false;
+    for (const point of list) {
+      const value = point[key];
+      if (value === null || value === undefined) { penDown = false; continue; }
+      if (penDown) g.lineTo(x(point.t), y(value));
+      else g.moveTo(x(point.t), y(value));
+      penDown = true;
+    }
+    g.stroke();
+  }
+}
+
+setInterval(() => {
+  const { request, loop } = bot.latency;
+  if (bot.connected) delays.push({ t: performance.now(), request: request.last, loop: loop.last });
+  forget(distances);
+  forget(delays);
+  draw($('distanceChart'), distances, [{ key: 'mm', color: '--accent' }],
+       scaleFor(distances, ['mm'], 1000, 500), 'mm');
+  draw($('delayChart'), delays, [{ key: 'request', color: '--accent' },
+                                 { key: 'loop', color: '--accent2' }],
+       scaleFor(delays, ['request', 'loop'], 200, 100), 'ms');
+}, 100);
+
+// WEB-4: handle a lost connection or restart.
+
+let restartedAt = -Infinity;
+
 // Link status and delays, a few times a second.
 setInterval(() => {
   const up = bot.connected;
   $('link').classList.toggle('on', up);
   $('linkText').textContent = up ? 'connecté' : 'pas de réponse';
+
+  // Everything but STOP is useless without the robot, and a button that
+  // seems to work and does nothing is worse than one that is plainly off.
+  for (const button of document.querySelectorAll('button:not(#stop)')) button.disabled = !up;
+
+  const restarted = performance.now() - restartedAt < 3000;
+  $('offline').textContent = !up ? 'Robot injoignable' : restarted ? 'Le robot a redémarré' : '';
+  $('offline').classList.toggle('show', !up || restarted);
 
   const { request, loop } = bot.latency;
   $('request').textContent = request.mean === null ? '–'
@@ -371,30 +492,3 @@ hello();
 </script>
 </body>
 </html>
-<!-- Try this:
- Work against the fake robot (node client/fakerobot.js, then
- http://localhost:8080/): it reads this file from disk on every reload.
- Flash the robot only once it works there.
-
-  1. DISTANCE CURVE. Draw front_mm over the last ten seconds on a <canvas>,
-     one point per telemetry line. Leave a gap where front_ok is false rather
-     than drawing -1: a line dropping to the bottom of the chart looks like
-     a wall appearing.
-
-  2. DELAY HISTORY. Draw bot.latency.request and bot.latency.loop over time,
-     on the same scale. Walk away from the access point with the phone and
-     watch. Which of the two changes, and why does the other one hardly move?
-
-  3. PULSE MODE. Holding a button is good for driving, bad for measuring. Add
-     a duration slider (100 to 5000 ms) and a way to send ONE movement of
-     exactly that duration per tap. Then drive 1000 ms at speed 200 three
-     times and measure the distance with a ruler: is it the same each time?
-
-  4. A ROBOT THAT RESTARTS, OR STOPS ANSWERING. Today the page greys out a dot
-     and carries on. Make it obvious: grey out the driving and mission
-     buttons while bot.connected is false, and say so in large letters. When
-     a {restarted: true} message arrives, say that too. Test both with the
-     fake robot: stop it with ctrl-C, then start it again. What had the
-     robot forgotten when it restarted, and where does the page send it
-     again?
--->

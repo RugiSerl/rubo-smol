@@ -221,15 +221,3 @@ private:
   int  _quality    = -1;   // no equivalent: it hears an echo or it does not
   int  _status     = -1;
 };
-
-// Try this:
-//
-//   1. A single bad reading should not panic the robot. Keep the last three
-//      readings and report the middle one (a median filter). Three lines,
-//      and it removes almost all the noise.
-//   2. Add a lastUpdateMs() so callers can tell a fresh reading from a stale
-//      one -- valid() only says the last reading was good, not that it was
-//      recent.
-//   3. MEASUREMENT_INTERVAL_MS is 60 ms because a chirp needs time to die
-//      away. How far down can you take it before one chirp starts hearing
-//      the last one? Measure it, do not guess.

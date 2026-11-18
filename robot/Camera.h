@@ -86,12 +86,3 @@ private:
   bool    _hasPicture = false;
   uint8_t _buffer[FRAME_BYTES];
 };
-
-// Try this:
-//
-//   1. brightestColumn(): which vertical strip of the picture is lightest?
-//      Steer towards it and the robot follows a torch beam.
-//   2. Compare the average brightness of the left half against the right half.
-//      Two numbers is often all the "vision" a robot needs.
-//   3. Count pixels darker than a threshold along one row near the bottom of
-//      the frame. That is a line follower, in about five lines of code.

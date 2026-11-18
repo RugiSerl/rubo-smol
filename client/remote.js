@@ -122,8 +122,8 @@ class SerialTransport extends EventEmitter {
         // debugging. One wire, two jobs. Messages are JSON objects, so a line
         // that does not start with '{' is not for us.
         //
-        // This is a deliberate compromise, not an oversight: see the TRY THIS
-        // at the bottom of robot/Radio.h for what doing it properly costs.
+        // Sending the debug output to a hardware UART instead would take GP0
+        // and GP1, which the camera uses.
         if (!line) continue;
         if (!line.startsWith('{')) { this.emit('noise', line); continue; }
         this.emit('line', line);

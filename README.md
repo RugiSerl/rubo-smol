@@ -14,6 +14,7 @@ Pour la première mise en route, suivre [`DEMARRAGE.md`](DEMARRAGE.md).
 | `python3 tools/pico.py console`   | Ouvrir la console USB (quitter : ctrl-A puis ctrl-X)   |
 | `python3 tools/test.py`           | Lancer les tests sur l'ordinateur, sans robot          |
 | `node client/fakerobot.js`        | Faux robot pour tester la page sur `http://localhost:8080/` |
+| `python3 tools/sim.py`            | Simuler une mission de `Robot.h` le long d'un mur ; voir [`SIMULATION.md`](SIMULATION.md) |
 
 Si le chargement échoue, rebrancher l'USB en maintenant le bouton BOOTSEL, puis relancer la commande.
 
@@ -26,7 +27,7 @@ Si le chargement échoue, rebrancher l'USB en maintenant le bouton BOOTSEL, puis
 | `robot/web/index.html`  | Page web du téléphone                           |
 | `robot/Config.h`        | Broches, WiFi et options du matériel            |
 
-Les exercices sont signalés par `---- TRY THIS ----` dans le code. Toute modification, y compris sous `robot/web/`, demande de recompiler et de recharger le robot.
+Les énoncés des exercices sont dans les sujets de TP. Toute modification, y compris sous `robot/web/`, demande de recompiler et de recharger le robot.
 
 [`API.md`](API.md), en anglais, décrit les commandes JSON et les fonctions disponibles dans `Robot.h` et `robot.js`.
 
