@@ -19,6 +19,10 @@
 #define OBSTACLE_STOP_MM  150   // mission 1: stop a forward movement this close, in mm
 #endif
 
+#define WALL_GAIN_NUM 1
+#define WALL_GAIN_DEN 3
+#define WALL_TARGET_MM 200
+
 /**
  * Robot handles commands, missions, movement deadlines and telemetry.
  * Add autonomous behaviour in mission() below.
@@ -139,9 +143,11 @@ private:
     sendTelemetry(true);
   }
 
+
   void followWall() {
-    int c = 0;
-    drive(255 - c, 255 + c, 200);
+    int ecart = WALL_TARGET_MM - side.distanceMm(); // positif : trop loin du mur
+    int c = ecart * WALL_GAIN_NUM / WALL_GAIN_DEN;
+    drive(120+c, 120-c, 200);
   }
 
   void driveSquare() {
