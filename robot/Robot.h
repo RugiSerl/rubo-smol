@@ -223,6 +223,7 @@ private:
       return;
     }
 
+
     // Signed subtraction handles the 32-bit clock wrapping; see Clock.h.
     bool timeIsUp        = !_hasDeadline || (int32_t)(nowMs() - _moveDeadline) >= 0;
     bool lostTheComputer = !_radio.connected();
