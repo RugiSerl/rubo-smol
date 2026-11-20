@@ -161,26 +161,29 @@ private:
   }
 
   void followWallPID() {
+    // Calcul de dt
     float dt = nowMs() - old_ms;
 
+    // Calcul de l'écart et stockage dans e[].
     int ecart = WALL_TARGET_MM - side.distanceMm(); // positif : trop loin du mur
     e[n] = ecart;
     n = (n+1)%ERR_BUF_SIZE;
     
-    // Coefficient proportionnel
-    int c = e[n];
+    // P : Coefficient proportionnel
+    int p = e[n];
 
-    // Coefficient intégral
+    // I : Coefficient intégral
     int i = 0;
     for (int j = 0; j<ERR_BUF_SIZE; j++) {
       i += e[j] * dt;
     }
     
-    // Coefficient dérivé
+    // D : Coefficient dérivé
     int prec = (n - 1 + ERR_BUF_SIZE)%ERR_BUF_SIZE;
     int d = (e[n] - e[prec]) / dt;
 
-    float corr = c * 0.3 + i * 0.4 + d * 0.3;
+    // Application de la correction
+    float corr = p * 0.3 + i * 0.4 + d * 0.3;
     drive(120+corr, 120-corr, 200);
 
     old_ms = nowMs();
