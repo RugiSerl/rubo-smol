@@ -184,6 +184,7 @@ private:
 
     // Application de la correction
     float corr = p * 0.3 + i * 0.4 + d * 0.3;
+    corr = 0; // Temp
     drive(120+corr, 120-corr, 200);
 
     old_ms = nowMs();
