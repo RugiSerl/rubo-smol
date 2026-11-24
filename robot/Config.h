@@ -92,7 +92,7 @@
 
 // Reverse a complete side if its motors turn backward.
 #define LEFT_MOTOR_REVERSED   false
-#define RIGHT_MOTOR_REVERSED  false
+#define RIGHT_MOTOR_REVERSED  true
 
 // Speeds are -255 .. +255; the minimum speed that turns a motor varies.
 #define MOTOR_MAX_SPEED     255
