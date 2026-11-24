@@ -141,6 +141,7 @@ private:
   // Mission 1: stop a forward movement when the front sensor reads under
   // OBSTACLE_STOP_MM. Reversing stays possible, so the robot can back away.
   void stopAtObstacle() {
+    drive(120, 120, 200);
     if (!front.valid()) return;              // never act on a missing reading
     if (front.distanceMm() >= OBSTACLE_STOP_MM) return;
     if (motors.left() <= 0 && motors.right() <= 0) return;
@@ -151,7 +152,14 @@ private:
   }
 
   void driveSquare() {
-
+    drive(120, 120, 200);
+    drive(-120, 120, 200);
+    drive(120, 120, 200);
+    drive(-120, 120, 200);
+    drive(120, 120, 200);
+    drive(-120, 120, 200);
+    drive(120, 120, 200);
+    return;
   }
 
   void followWall() {
