@@ -449,12 +449,42 @@ constexpr double FAR = 100000;   // 100 m: the wall of the mur scene has no end 
 constexpr double BOX_FROM_X  = 1500;
 constexpr double BOX_SIDE    = 300;
 constexpr double PATROL_END  = 3500;   // the far wall, across the end of the wall
+constexpr double WALL_WIDTH  = 2000;   // the obstacle scene's wall, across the path
+
+// The obstacle's size, in mm: the box's side in patrouille, the wall's
+// width across the path in obstacle. Changed from the live view, or with
+// --obstacle-size.
+constexpr double OBSTACLE_MIN_MM = 50;
+constexpr double OBSTACLE_MAX_MM = 4000;
+inline double obstacleSize = 0;
+inline double obstacleX    = 0;
 
 inline void box(double x0, double y0, double x1, double y1, bool obstacle) {
   walls.push_back({x0, y0, x1, y0, {}, obstacle});
   walls.push_back({x1, y0, x1, y1, {}, obstacle});
   walls.push_back({x1, y1, x0, y1, {}, obstacle});
   walls.push_back({x0, y1, x0, y0, {}, obstacle});
+}
+
+// Adds the obstacle's walls for the current scene and obstacleSize.
+inline void addObstacle() {
+  if (sceneName == "patrouille")
+    box(BOX_FROM_X, startY - obstacleSize / 2,
+        BOX_FROM_X + obstacleSize, startY + obstacleSize / 2, true);
+  else if (sceneName == "obstacle")
+    walls.push_back({obstacleX, -obstacleSize / 2, obstacleX, obstacleSize / 2, {}, true});
+}
+
+// Resizes the obstacle, keeping its near face where it was. Returns false
+// for a scene without one.
+inline bool setObstacleSize(double mm) {
+  if (sceneName != "patrouille" && sceneName != "obstacle") return false;
+  obstacleSize = std::min(OBSTACLE_MAX_MM, std::max(OBSTACLE_MIN_MM, mm));
+  walls.erase(std::remove_if(walls.begin(), walls.end(),
+                             [](const Wall& w) { return w.obstacle; }),
+              walls.end());
+  addObstacle();
+  return true;
 }
 
 // The start distance each scene uses when none is given.
@@ -471,6 +501,8 @@ inline bool setScene(const std::string& name, double start, double headingDeg,
                      const std::vector<Gap>& doors) {
   sceneName = name;
   walls.clear();
+  obstacleSize = 0;
+  obstacleX = 0;
   double h = std::remainder(headingDeg * M_PI / 180, 2 * M_PI);
   if (name == "mur" || name == "patrouille") {
     wallScene = true;
@@ -484,15 +516,17 @@ inline bool setScene(const std::string& name, double start, double headingDeg,
     startY = -(start + HALF_WIDTH_MM);
     if (name == "patrouille") {
       walls.push_back({PATROL_END, 0, PATROL_END, -2000, {}, false});
-      box(BOX_FROM_X, startY - BOX_SIDE / 2, BOX_FROM_X + BOX_SIDE, startY + BOX_SIDE / 2, true);
+      obstacleSize = BOX_SIDE;
+      addObstacle();
     }
   } else if (name == "obstacle") {
     // A wall across the robot's path, 2 m wide.
     wallScene = false;
-    double at = HALF_LENGTH_MM + start;
-    walls.push_back({at, -1000, at, 1000, {}, true});
     startX = 0;
     startY = 0;
+    obstacleX = HALF_LENGTH_MM + start;
+    obstacleSize = WALL_WIDTH;
+    addObstacle();
   } else if (name == "salle") {
     // A room of 3 m by 2.4 m, the robot on its middle line facing +x.
     wallScene = false;

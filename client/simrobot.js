@@ -17,7 +17,7 @@
  *     http://localhost:8080/sim   the same page, beside the room seen from above
  *
  * Other options, as for tools/sim.py: --start MM, --heading DEG, --door A:B,
- * -D NAME=VALUE. --http-port N changes the port.
+ * --obstacle-size MM, -D NAME=VALUE. --http-port N changes the port.
  */
 
 const childProcess = require('child_process');
@@ -33,6 +33,7 @@ const LINES_KEPT = 16;           // as in robot/WebRadio.h
 const COMMANDS_KEPT = 8;
 const WEB_TIMEOUT_MS = 1500;     // as in robot/Config.h, for --sans-firmware
 const SCENES = ['salle', 'obstacle', 'mur', 'patrouille'];
+const OBSTACLE_SCENES = ['obstacle', 'patrouille'];
 
 const ROOT = path.join(__dirname, '..');
 const WEB_DIR = path.join(ROOT, 'robot', 'web');
@@ -87,7 +88,8 @@ class Firmware {
     this.status = 'starting';      // running, stuck, crashed, stopped
     this.message = '';
     this.version = 0;              // goes up at each start, with the scene
-    this.world = { robot: null, walls: [], scene: null };
+    this.world = { robot: null, walls: [], scene: null, revision: 0 };
+    this.pending = null;           // a scene description still arriving
     this.pose = null;
     this.consoleOpen = false;
   }
@@ -118,6 +120,7 @@ class Firmware {
     const o = this.options;
     const args = ['--live', '--scene', o.scene, '--heading', String(o.heading)];
     if (o.start !== null) args.push('--start', String(o.start));
+    if (o.obstacleSize !== null) args.push('--obstacle-size', String(o.obstacleSize));
     for (const door of o.doors) args.push('--door', door);
 
     const child = childProcess.spawn(binary, args, { stdio: ['pipe', 'pipe', 'inherit', 'pipe'] });
@@ -125,7 +128,8 @@ class Firmware {
     this.status = 'running';
     this.message = '';
     this.version += 1;
-    this.world = { robot: null, walls: [], scene: null };
+    this.world = { robot: null, walls: [], scene: null, revision: 0 };
+    this.pending = null;
     this.pose = null;
     this.onRestart();
 
@@ -135,9 +139,18 @@ class Firmware {
       const rest = line.slice(space + 1);
       if (kind === 'line') this.onLine(rest);
       else if (kind === 'pose') this.pose = JSON.parse(rest);
-      else if (kind === 'wall') this.world.walls.push(JSON.parse(rest));
-      else if (kind === 'robot') this.world.robot = JSON.parse(rest);
-      else if (kind === 'scene') this.world.scene = JSON.parse(rest);
+      else if (kind === 'robot') this.pending = { robot: JSON.parse(rest), walls: [] };
+      else if (kind === 'wall' && this.pending) this.pending.walls.push(JSON.parse(rest));
+      else if (kind === 'scene') {
+        const scene = JSON.parse(rest);
+        if (this.pending) {
+          this.world = { ...this.pending, scene, revision: this.world.revision + 1 };
+          this.pending = null;
+        } else {
+          this.world.scene = scene;
+          this.world.revision += 1;
+        }
+      }
     });
     // What Robot.h prints, as the console would show it.
     readline.createInterface({ input: child.stdout }).on('line', (line) => {
@@ -263,6 +276,14 @@ function serve(options) {
       json(response, 200, { ok: true });
     } else if (post && url.pathname === '/sim/obstacle' && options.firmware) {
       robot.send(`obstacle ${url.searchParams.get('present') === '1' ? 1 : 0}`);
+      json(response, 200, { ok: true });
+    } else if (post && url.pathname === '/sim/obstacle-size' && options.firmware) {
+      const size = Number(url.searchParams.get('mm'));
+      if (!Number.isFinite(size) || size <= 0) {
+        json(response, 400, { ok: false, message: 'expected a size in mm above 0' });
+        return;
+      }
+      robot.send(`obstacle size ${Math.round(size)}`);
       json(response, 200, { ok: true });
     } else if (post && url.pathname === '/sim/unplug' && options.firmware) {
       const sensor = url.searchParams.get('sensor') === 'side' ? 'side' : 'front';
@@ -402,13 +423,14 @@ function serve(options) {
 function usage(problem) {
   console.error(`simrobot: ${problem}\n` +
                 'usage: node client/simrobot.js [--scene NAME] [--console] [--start MM] [--heading DEG]\n' +
-                '                               [--door A:B] [-D NAME=VALUE] [--http-port N] [--sans-firmware]');
+                '                               [--door A:B] [--obstacle-size MM] [-D NAME=VALUE]\n' +
+                '                               [--http-port N] [--sans-firmware]');
   process.exit(1);
 }
 
 function main() {
   const options = {
-    scene: 'salle', start: null, heading: 0, doors: [], defines: [],
+    scene: 'salle', start: null, heading: 0, obstacleSize: null, doors: [], defines: [],
     httpPort: HTTP_PORT, console: false, firmware: true, quiet: false,
   };
   const args = process.argv.slice(2);
@@ -426,6 +448,7 @@ function main() {
     if (arg === '--scene') options.scene = value();
     else if (arg === '--start') options.start = number(value());
     else if (arg === '--heading') options.heading = number(value());
+    else if (arg === '--obstacle-size') options.obstacleSize = number(value());
     else if (arg === '--door') options.doors.push(value());
     else if (arg === '-D') options.defines.push(value());
     else if (arg === '--http-port') options.httpPort = number(value());
@@ -435,6 +458,10 @@ function main() {
     else usage(`unknown option ${arg}`);
   }
   if (!SCENES.includes(options.scene)) usage(`--scene ${options.scene}: expected one of ${SCENES.join(', ')}`);
+  if (options.obstacleSize !== null && options.obstacleSize <= 0)
+    usage('--obstacle-size: expected a size in mm above 0');
+  if (options.obstacleSize !== null && !OBSTACLE_SCENES.includes(options.scene))
+    usage(`--obstacle-size: the ${options.scene} scene has no obstacle (--scene obstacle or patrouille)`);
   if (options.httpPort <= 0) usage('--http-port: expected a port number');
   for (const door of options.doors) {
     if (!/^-?[\d.]+:-?[\d.]+$/.test(door)) usage(`--door ${door}: expected FROM:TO in mm, such as 2000:2800`);

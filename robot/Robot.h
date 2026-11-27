@@ -11,20 +11,6 @@
 #include "Camera.h"
 #include "Radio.h"
 #include "Json.h"
-#include <unistd.h>
-
-// Mission settings. These are defaults: a #define of the same name in
-// Config.local.h takes precedence, so tuned values survive a new copy of
-// this file.
-#ifndef OBSTACLE_STOP_MM
-#define OBSTACLE_STOP_MM  150   // mission 1: stop a forward movement this close, in mm
-#endif
-
-#define WALL_GAIN_NUM 1
-#define WALL_GAIN_DEN 3
-#define WALL_TARGET_MM 200
-
-#define ERR_BUF_SIZE 10
 
 /**
  * Robot handles commands, missions, movement deadlines and telemetry.
@@ -65,9 +51,6 @@ public:
   TofSensor        side;
   Display          display;
   Camera           camera;
-  int              e[ERR_BUF_SIZE] = { 0 };
-  int              n = 0;
-  float            old_ms = 0;
 
   // Every device checks its own *_ENABLED in Config.h, so each begin() below
   // does nothing for a device that is switched off.
@@ -109,7 +92,7 @@ private:
   static constexpr size_t MAX_LINE = Radio::MAX_LINE;
 
   int      _seq            = -1;
-  int      _mission        = 4;       // 0 = no mission
+  int      _mission        = 0;       // 0 = no mission
   uint32_t _moveDeadline   = 0;
   bool     _hasDeadline    = false;
   uint32_t _telemetryEvery = DEFAULT_TELEMETRY_MS;
@@ -124,81 +107,17 @@ private:
   // in number order so the phone page can show its button:
   //
   //      static constexpr const char* MISSION_NAMES = "mur,carre";
-  static constexpr const char* MISSION_NAMES = "obstacle,carre,mur,pid";
+  static constexpr const char* MISSION_NAMES = "";
 
   void mission() {
     switch (_mission) {
       case 0: break;
-      case 1: stopAtObstacle(); break;
-      case 2: driveSquare(); break;
-      case 3: followWall(); break;
-      case 4: followWallPID(); break;
+
+      // case 1: followWall(); break;
+      // case 2: driveSquare(); break;
 
       default: break;
     }
-  }
-
-  // Mission 1: stop a forward movement when the front sensor reads under
-  // OBSTACLE_STOP_MM. Reversing stays possible, so the robot can back away.
-  void stopAtObstacle() {
-    drive(120, 120, 200);
-    if (!front.valid()) return;              // never act on a missing reading
-    if (front.distanceMm() >= OBSTACLE_STOP_MM) return;
-    if (motors.left() <= 0 && motors.right() <= 0) return;
-
-    motors.stop();
-    _hasDeadline = false;
-    sendTelemetry(true);
-  }
-
-  void driveSquare() {
-    drive(120, 120, 200);
-    drive(-120, 120, 200);
-    drive(120, 120, 200);
-    drive(-120, 120, 200);
-    drive(120, 120, 200);
-    drive(-120, 120, 200);
-    drive(120, 120, 200);
-    return;
-  }
-
-  void followWall() {
-    int ecart = WALL_TARGET_MM - side.distanceMm(); // positif : trop loin du mur
-    int c = ecart * WALL_GAIN_NUM / WALL_GAIN_DEN;
-    drive(120+c, 120-c, 200);
-  }
-
-  void followWallPID() {
-    // Calcul de dt
-    // float dt = nowMs() - old_ms;
-    float dt = 1;
-
-    float baseSpeed = 180;
-
-    // Calcul de l'écart et stockage dans e[].
-    int ecart = WALL_TARGET_MM - side.distanceMm(); // positif : trop loin du mur
-    e[n] = ecart;
-    n = (n+1)%ERR_BUF_SIZE;
-    
-    // P : Coefficient proportionnel
-    int p = e[n];
-
-    // I : Coefficient intégral
-    int i = 0;
-    for (int j = 0; j<ERR_BUF_SIZE; j++) {
-      i += e[j] * dt;
-    }
-    
-    // D : Coefficient dérivé
-    int prec = (n - 1 + ERR_BUF_SIZE)%ERR_BUF_SIZE;
-    int d = (e[n] - e[prec]) / dt;
-
-    // Application de la correction
-    float corr = p * 0.4 + i * 0.09 - d * 80;
-    // corr *= -1; // Laisser juste pour la simulation
-    drive(baseSpeed+0.1*corr, baseSpeed-0.1*corr, 200);
-
-    old_ms = nowMs();
   }
 
   // Drain all complete lines so a burst does not linger in the input buffer.
@@ -269,7 +188,6 @@ private:
       _hasDeadline = false;
       return;
     }
-
 
     // Signed subtraction handles the 32-bit clock wrapping; see Clock.h.
     bool timeIsUp        = !_hasDeadline || (int32_t)(nowMs() - _moveDeadline) >= 0;

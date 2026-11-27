@@ -35,6 +35,8 @@
   button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
   button:hover { border-color: var(--muted); }
   label { color: var(--muted); }
+  #obstacle-size { width: 110px; vertical-align: middle; }
+  #obstacle-size-value { display: inline-block; min-width: 3.5em; text-align: right; }
   .readout { color: var(--muted); font-variant-numeric: tabular-nums; }
   .readout b { color: var(--text); font-weight: 600; }
   .up { color: var(--good); } .down { color: var(--bad); }
@@ -59,6 +61,11 @@
       <button id="reload" title="Comme recompiler et recharger le robot">Recompiler Robot.h et redémarrer</button>
       <button id="place" title="Le reposer à son point de départ, sans le redémarrer">Replacer le robot</button>
       <button id="obstacle" hidden>Retirer l'obstacle</button>
+      <label id="obstacle-size-row" hidden>Taille de l'obstacle
+        <input type="range" id="obstacle-size" min="50" max="4000" step="10"
+               title="Côté de la boîte (patrouille) ou largeur du mur (obstacle), en mm">
+        <output id="obstacle-size-value"></output> mm
+      </label>
       <label><input type="checkbox" id="front"> capteur avant débranché</label>
       <label><input type="checkbox" id="side"> capteur latéral débranché</label>
     </div>
@@ -74,6 +81,7 @@ const g = canvas.getContext('2d');
 let state = null;            // the latest answer to /sim/state
 let trail = [];              // where the robot has been, as [x, y]
 let version = -1;
+let geometry = -1;           // changes when the walls do
 let view = null;             // how the room fits the canvas
 
 function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
@@ -228,6 +236,12 @@ function show() {
   const hasObstacle = state.world.walls.some((w) => w.obstacle);
   $('obstacle').hidden = !hasObstacle;
   $('obstacle').textContent = pose.obstacle ? 'Retirer l\'obstacle' : 'Remettre l\'obstacle';
+  $('obstacle-size-row').hidden = !hasObstacle;
+  const size = $('obstacle-size');
+  if (hasObstacle && document.activeElement !== size) {
+    size.value = Math.round(pose.obstacle_mm ?? 0);
+    $('obstacle-size-value').textContent = size.value;
+  }
   $('front').checked = pose.front_unplugged;
   $('side').checked = pose.side_unplugged;
 }
@@ -239,8 +253,13 @@ async function poll() {
     if (state.firmware && state.world && state.world.scene) {
       if (state.version !== version) {
         version = state.version;
-        view = fit(state.world);
         trail = [];
+        geometry = -1;
+      }
+      const revision = state.world.revision ?? 0;
+      if (revision !== geometry) {
+        geometry = revision;
+        view = fit(state.world);
       }
       if (state.pose) {
         const last = trail[trail.length - 1];
@@ -270,6 +289,9 @@ $('reload').addEventListener('click', async () => {
 });
 $('place').addEventListener('click', () => { trail = []; post('/sim/place'); });
 $('obstacle').addEventListener('click', () => post(`/sim/obstacle?present=${state.pose.obstacle ? 0 : 1}`));
+const obstacleSize = $('obstacle-size');
+obstacleSize.addEventListener('input', () => { $('obstacle-size-value').textContent = obstacleSize.value; });
+obstacleSize.addEventListener('change', () => post(`/sim/obstacle-size?mm=${obstacleSize.value}`));
 for (const sensor of ['front', 'side']) {
   $(sensor).addEventListener('change', () => post(`/sim/unplug?sensor=${sensor}&unplugged=${$(sensor).checked ? 1 : 0}`));
 }

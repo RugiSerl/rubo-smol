@@ -16,11 +16,11 @@ Le robot simulé a les défauts d'un vrai robot : un côté plus faible que l'au
 | Scène        | Contenu                                                                                | Départ par défaut (`--start`)             |
 | ------------ | -------------------------------------------------------------------------------------- | ----------------------------------------- |
 | `mur`        | Un mur droit, sans fin, à gauche du robot                                              | flanc gauche à 260 mm du mur              |
-| `patrouille` | Le même mur, une boîte de 300 mm sur le chemin à x = 1,5 m, un mur en travers à x = 3,5 m | flanc gauche à 260 mm du mur              |
-| `obstacle`   | Un mur en travers du chemin                                                            | avant du robot à 800 mm du mur            |
+| `patrouille` | Le même mur, une boîte de 300 mm (taille réglable) sur le chemin à x = 1,5 m, un mur en travers à x = 3,5 m | flanc gauche à 260 mm du mur              |
+| `obstacle`   | Un mur en travers du chemin (largeur réglable)                                         | avant du robot à 800 mm du mur            |
 | `salle`      | Une pièce fermée de 3 m sur 2,4 m, le robot sur sa ligne du milieu                     | avant du robot à 1400 mm du mur d'en face |
 
-Le robot part toujours face à l'axe x. La boîte de `patrouille` et le mur de `obstacle` sont l'« obstacle » de la scène : on peut le retirer et le remettre pendant que le robot roule.
+Le robot part toujours face à l'axe x. La boîte de `patrouille` et le mur de `obstacle` sont l'« obstacle » de la scène : on peut le retirer, le remettre et régler sa taille pendant que le robot roule.
 
 ## Jouer une suite de commandes : `tools/sim.py`
 
@@ -181,7 +181,10 @@ La vue `/sim` montre le robot, son chemin, et le cône de chaque capteur jusqu'�
 | Recompiler Robot.h et redémarrer   | Comme recompiler et recharger le robot : il redémarre, et la page le voit redémarrer. Si la compilation échoue, l'erreur s'affiche et le robot garde son programme |
 | Replacer le robot                  | Le reposer à son point de départ, sans le redémarrer                                   |
 | Retirer l'obstacle                 | Retirer ou remettre l'obstacle (scènes `obstacle` et `patrouille`)                     |
+| Taille de l'obstacle               | Curseur : régler la taille de l'obstacle, en mm (scènes `obstacle` et `patrouille`)    |
 | capteur avant / latéral débranché  | Débrancher un capteur, puis le rebrancher                                              |
+
+« Taille de l'obstacle » règle le côté de la boîte de `patrouille` ou la largeur du mur de `obstacle`, en millimètres. Le changement s'applique pendant que le robot roule.
 
 La ligne du dessous donne l'état de la liaison, les commandes des roues, les deux mesures, la position du centre du robot (en mm) et le temps écoulé depuis le démarrage.
 
@@ -191,6 +194,7 @@ La ligne du dessous donne l'état de la liaison, les commandes des roues, les de
 | `--console`         | Taper les commandes dans le terminal, comme dans `tools/pico.py console` (voir ci-dessous)     |
 | `--sans-firmware`   | Ne pas compiler `Robot.h` (voir ci-dessous)                                                    |
 | `--start`, `--heading`, `--door`, `-D` | Comme pour `tools/sim.py`                                                   |
+| `--obstacle-size MM`| Taille de départ de l'obstacle, en mm (scènes `obstacle` et `patrouille`)                      |
 | `--http-port 8000`  | Servir la page sur un autre port                                                               |
 
 **Console.** Avec `--console`, chaque ligne tapée dans le terminal part au robot, et chaque ligne qu'il renvoie s'affiche, comme avec le câble USB. La liaison reste active tant que la console est ouverte ; ctrl-D la ferme, comme quitter `tools/pico.py console`, et le robot perd la liaison. La page reste utilisable pendant ce temps : tant qu'elle est ouverte, ses requêtes maintiennent aussi la liaison.

@@ -4,8 +4,8 @@
 //
 //     sim [--live] [--trace FILE] [--transcript FILE] [--duration MS]
 //         [--scene NAME] [--start MM] [--heading DEG] [--seed N] [--door A:B]...
-//         [--send MS:LINE]... [--offline A:B]... [--remove MS] [--place MS]
-//         [--unplug front|side:A:B]...
+//         [--obstacle-size MM] [--send MS:LINE]... [--offline A:B]...
+//         [--remove MS] [--place MS] [--unplug front|side:A:B]...
 //
 // Times are in ms after the first command (sim::COMMAND_MS).
 //
@@ -15,6 +15,7 @@
 //     heard                   the phone made a request: the WiFi link is up
 //     console 0|1             the console is closed or open
 //     obstacle 0|1            take the obstacle away or put it back
+//     obstacle size MM        resize the obstacle
 //     unplug front|side 0|1   plug a sensor back in, or pull it out
 //     place                   put the robot back where it started
 //
@@ -41,6 +42,7 @@
 #include "Robot.h"     // robot/Robot.h, copied next to this file by tools/sim.py
 
 static FILE* liveOut = nullptr; // file descriptor 3, in live mode
+static void describeScene(FILE* out);
 
 // The link to the computer or the phone. Lines in sim::inbox arrive when the
 // timeline (tools/sim.py) or the live input (client/simrobot.js) puts them
@@ -132,6 +134,11 @@ static void obey(const std::string& line) {
     radio.lastHeard = sim::now;
   } else if (line.rfind("console ", 0) == 0) {
     radio.consoleOpen = line[8] == '1';
+  } else if (line.rfind("obstacle size ", 0) == 0) {
+    const char* text = line.c_str() + 14;
+    char* end = nullptr;
+    double mm = std::strtod(text, &end);
+    if (end != text && sim::setObstacleSize(mm) && liveOut) describeScene(liveOut);
   } else if (line.rfind("obstacle ", 0) == 0) {
     sim::obstaclePresent = line[9] == '1';
   } else if (line.rfind("unplug front ", 0) == 0) {
@@ -162,13 +169,14 @@ static void publishPose() {
   fprintf(liveOut, "pose {\"ms\":%u,\"x\":%.1f,\"y\":%.1f,\"heading\":%.2f,"
                 "\"left\":%d,\"right\":%d,\"front_mm\":%d,\"front_ok\":%s,"
                 "\"side_mm\":%d,\"side_ok\":%s,\"bumping\":%s,\"linked\":%s,"
-                "\"obstacle\":%s,\"front_unplugged\":%s,\"side_unplugged\":%s}\n",
+                "\"obstacle\":%s,\"obstacle_mm\":%g,\"front_unplugged\":%s,"
+                "\"side_unplugged\":%s}\n",
           sim::now, sim::x, sim::y, sim::heading * 180 / M_PI,
           sim::leftCommand, sim::rightCommand,
           sim::frontShownMm, sim::frontShownOk ? "true" : "false",
           sim::sideShownMm, sim::sideShownOk ? "true" : "false",
           sim::bumping ? "true" : "false", radio.connected() ? "true" : "false",
-          sim::obstaclePresent ? "true" : "false",
+          sim::obstaclePresent ? "true" : "false", sim::obstacleSize,
           sim::frontUnplugged ? "true" : "false", sim::sideUnplugged ? "true" : "false");
 }
 
@@ -219,7 +227,7 @@ int main(int argc, char** argv) {
   const char* tracePath = nullptr;
   const char* transcriptPath = nullptr;
   std::string scene = "mur";
-  double start = -1, headingDeg = 0;
+  double start = -1, headingDeg = 0, obstacleSize = -1;
   unsigned seed = 1;
   std::vector<sim::Gap> doors;
   auto at = [](double ms) { return sim::COMMAND_MS + (uint32_t)(ms < 0 ? 0 : ms); };
@@ -236,6 +244,7 @@ int main(int argc, char** argv) {
     else if (arg == "--scene")      scene = value;
     else if (arg == "--start")      start = atof(value);
     else if (arg == "--heading")    headingDeg = atof(value);
+    else if (arg == "--obstacle-size") obstacleSize = atof(value);
     else if (arg == "--seed")       seed = (unsigned)atol(value);
     else if (arg == "--door") {
       if (!numbers(value, a, b)) usage("--door A:B");
@@ -271,6 +280,8 @@ int main(int argc, char** argv) {
   sim::frontRng.seed(seed + 1000);
   if (start < 0) start = sim::defaultStart(scene);
   if (!sim::setScene(scene, start, headingDeg, doors)) usage("unknown scene");
+  if (obstacleSize >= 0 && !sim::setObstacleSize(obstacleSize))
+    usage("--obstacle-size: this scene has no obstacle");
 
   if (tracePath) {
     sim::trace = fopen(tracePath, "w");
