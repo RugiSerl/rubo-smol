@@ -70,6 +70,8 @@
       <label><input type="checkbox" id="side"> capteur latéral débranché</label>
     </div>
     <div class="readout" id="readout"></div>
+    <div class="readout">Flèches du clavier : ▲ avancer, ▼ reculer, ◀ tourner à gauche,
+      ▶ tourner à droite. Maintenir pour rouler, relâcher pour arrêter.</div>
     <pre id="message"></pre>
   </main>
 </div>
@@ -295,6 +297,105 @@ obstacleSize.addEventListener('change', () => post(`/sim/obstacle-size?mm=${obst
 for (const sensor of ['front', 'side']) {
   $(sensor).addEventListener('change', () => post(`/sim/unplug?sensor=${sensor}&unplugged=${$(sensor).checked ? 1 : 0}`));
 }
+
+// The arrow keys drive the robot, as the buttons of the phone page do: the
+// same command is sent again while the key is held, and a stop when the last
+// one is released. The speed is the page's "vitesse" slider.
+const HOLD_MS = 400;             // as in robot/web/index.html
+const REPEAT_MS = 150;
+const KEY_DRIVE = {
+  ArrowUp: [1, 1],
+  ArrowDown: [-1, -1],
+  ArrowLeft: [-1, 1],
+  ArrowRight: [1, -1],
+};
+const heldKeys = [];             // the arrow keys down now, oldest first
+let drivingTimer = null;
+let driving = false;
+
+function padSpeed() {
+  try {
+    const slider = document.querySelector('iframe').contentDocument.getElementById('speed');
+    if (slider) return Number(slider.value);
+  } catch (error) { /* the page is not there yet */ }
+  return 180;
+}
+
+function sendCommand(command) {
+  fetch('/api/command', { method: 'POST', body: JSON.stringify(command) + '\n' }).catch(() => {});
+}
+
+function driveStep() {
+  const key = heldKeys[heldKeys.length - 1];
+  if (!key) return;
+  const [left, right] = KEY_DRIVE[key];
+  const speed = padSpeed();
+  sendCommand({ left: left * speed, right: right * speed, duration: HOLD_MS });
+}
+
+function refreshDriving() {
+  clearInterval(drivingTimer);
+  drivingTimer = null;
+  if (!heldKeys.length) {
+    if (driving) sendCommand({ stop: true });
+    driving = false;
+    return;
+  }
+  driveStep();
+  driving = true;
+  drivingTimer = setInterval(driveStep, REPEAT_MS);
+}
+
+function typing(event) {
+  const target = event.target;
+  return target && (target.isContentEditable ||
+                    ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+}
+
+function onKeyDown(event) {
+  if (!KEY_DRIVE[event.key] || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (typing(event)) return;
+  event.preventDefault();
+  if (!heldKeys.includes(event.key)) heldKeys.push(event.key);
+  refreshDriving();
+}
+
+function onKeyUp(event) {
+  if (!KEY_DRIVE[event.key]) return;
+  const at = heldKeys.indexOf(event.key);
+  if (at < 0) return;
+  event.preventDefault();
+  heldKeys.splice(at, 1);
+  refreshDriving();
+}
+
+function stopKeys() {
+  heldKeys.length = 0;
+  refreshDriving();
+}
+
+window.addEventListener('keydown', onKeyDown);
+window.addEventListener('keyup', onKeyUp);
+window.addEventListener('blur', stopKeys);
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopKeys(); });
+
+// A key pressed while the page inside the iframe has the focus goes to that
+// page, not to this one: listen there too. Both pages are served by
+// client/simrobot.js, so they share an origin.
+const frame = document.querySelector('iframe');
+const listenedWindows = new WeakSet();
+function listenInsideFrame() {
+  try {
+    const view = frame.contentWindow;
+    if (listenedWindows.has(view)) return;
+    listenedWindows.add(view);
+    view.addEventListener('keydown', onKeyDown);
+    view.addEventListener('keyup', onKeyUp);
+    view.addEventListener('blur', stopKeys);
+  } catch (error) { /* not loaded yet */ }
+}
+frame.addEventListener('load', listenInsideFrame);
+listenInsideFrame();
 
 poll();
 draw();

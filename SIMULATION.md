@@ -186,6 +186,8 @@ La vue `/sim` montre le robot, son chemin, et le cône de chaque capteur jusqu'�
 
 « Taille de l'obstacle » règle le côté de la boîte de `patrouille` ou la largeur du mur de `obstacle`, en millimètres. Le changement s'applique pendant que le robot roule.
 
+Les flèches du clavier pilotent aussi le robot, comme les boutons de la page : ▲ avance, ▼ recule, ◀ tourne à gauche et ▶ tourne à droite tant que la touche reste enfoncée ; relâcher arrête. La vitesse est celle du curseur « vitesse » de la page. Les flèches sont ignorées quand le curseur est dans un champ de la page.
+
 La ligne du dessous donne l'état de la liaison, les commandes des roues, les deux mesures, la position du centre du robot (en mm) et le temps écoulé depuis le démarrage.
 
 | Option              | Effet                                                                                          |
