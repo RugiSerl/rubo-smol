@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1280.0" width="920" height="1280.0" font-family="system-ui, sans-serif">
+<style>.sim-title{font-size:14px;font-weight:600;fill:var(--sim-text, #3c4043)}.sim-tick{font-size:11px;fill:var(--sim-axis, #5f6368)}.sim-label{font-size:12px;fill:var(--sim-text, #3c4043)}.sim-end{font-size:14px;font-weight:600;fill:var(--sim-text, #3c4043)}.sim-grid{stroke:var(--sim-grid, #e3e5e8);stroke-width:1}.sim-frame{fill:none;stroke:var(--sim-axis, #5f6368);stroke-width:1}.sim-s-run{stroke:var(--sim-run, #1f6fd1)}.sim-f-run{fill:var(--sim-run, #1f6fd1)}.sim-s-left{stroke:var(--sim-left, #d1561f)}.sim-f-left{fill:var(--sim-left, #d1561f)}.sim-s-right{stroke:var(--sim-right, #1f8f5a)}.sim-f-right{fill:var(--sim-right, #1f8f5a)}.sim-s-grey{stroke:var(--sim-grey, #9aa0a6)}.sim-f-grey{fill:var(--sim-grey, #9aa0a6)}.sim-s-grid{stroke:var(--sim-grid, #e3e5e8)}.sim-f-grid{fill:var(--sim-grid, #e3e5e8)}.sim-s-axis{stroke:var(--sim-axis, #5f6368)}.sim-f-axis{fill:var(--sim-axis, #5f6368)}.sim-s-wall{stroke:var(--sim-wall, #202124)}.sim-f-wall{fill:var(--sim-wall, #202124)}.sim-s-missing{stroke:var(--sim-missing, #c5221f)}.sim-f-missing{fill:var(--sim-missing, #c5221f)}.sim-s-text{stroke:var(--sim-text, #3c4043)}.sim-f-text{fill:var(--sim-text, #3c4043)}.sim-s-bg{stroke:var(--sim-bg, #ffffff)}.sim-f-bg{fill:var(--sim-bg, #ffffff)}.sim-s-body{stroke:var(--sim-body, #e8f0fb)}.sim-f-body{fill:var(--sim-body, #e8f0fb)}.sim-s-beam{stroke:var(--sim-beam, #f3d9cc)}.sim-f-beam{fill:var(--sim-beam, #f3d9cc)}.sim-s-obstacle{stroke:var(--sim-obstacle, #a0662a)}.sim-f-obstacle{fill:var(--sim-obstacle, #a0662a)}.sim-s-band{stroke:var(--sim-band, #f1f3f4)}.sim-f-band{fill:var(--sim-band, #f1f3f4)}.sim-s-front{stroke:var(--sim-front, #7b4fc9)}.sim-f-front{fill:var(--sim-front, #7b4fc9)}</style>
+<rect width="920" height="1280.0" class="sim-f-bg"/>
+<rect x="70" y="13" width="14" height="4" class="sim-f-run"/>
+<text x="90" y="18" class="sim-tick">run</text>
+<text x="900" y="22" class="sim-tick" text-anchor="end">scene obstacle</text>
+<text x="70" y="48" class="sim-end">Ended: the wheels have not turned for 3 s at 3.00 s</text>
+<text x="70" y="78" class="sim-title">Seen from above, to scale</text>
+<line x1="222.5" y1="90" x2="222.5" y2="510.0" class="sim-grid"/>
+<text x="222.5" y="525.0" class="sim-tick" text-anchor="middle">-500</text>
+<line x1="485.0" y1="90" x2="485.0" y2="510.0" class="sim-grid"/>
+<text x="485.0" y="525.0" class="sim-tick" text-anchor="middle">0</text>
+<line x1="747.5" y1="90" x2="747.5" y2="510.0" class="sim-grid"/>
+<text x="747.5" y="525.0" class="sim-tick" text-anchor="middle">500</text>
+<line x1="70" y1="510.0" x2="900" y2="510.0" class="sim-grid"/>
+<text x="64" y="514.0" class="sim-tick" text-anchor="end">-400</text>
+<line x1="70" y1="405.0" x2="900" y2="405.0" class="sim-grid"/>
+<text x="64" y="409.0" class="sim-tick" text-anchor="end">-200</text>
+<line x1="70" y1="300.0" x2="900" y2="300.0" class="sim-grid"/>
+<text x="64" y="304.0" class="sim-tick" text-anchor="end">0</text>
+<line x1="70" y1="195.0" x2="900" y2="195.0" class="sim-grid"/>
+<text x="64" y="199.0" class="sim-tick" text-anchor="end">200</text>
+<line x1="70" y1="90.0" x2="900" y2="90.0" class="sim-grid"/>
+<text x="64" y="94.0" class="sim-tick" text-anchor="end">400</text>
+<rect x="70" y="90" width="830" height="420.0" class="sim-frame"/>
+<text x="900" y="540.0" class="sim-label" text-anchor="end">x (mm)</text>
+<text x="20" y="300.0" class="sim-label" text-anchor="middle" transform="rotate(-90 20 300.0)">y (mm)</text>
+<clipPath id="sim-room"><rect x="70" y="90" width="830" height="420.0"/></clipPath>
+<g clip-path="url(#sim-room)">
+<line x1="957.5" y1="825.0" x2="957.5" y2="-225.0" class="sim-s-obstacle" stroke-width="5"/>
+<polyline points="485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0 485.0,300.0" fill="none" class="sim-s-run" stroke-width="1.6" stroke-linejoin="round"/>
+<g transform="translate(485.0 300.0) rotate(-0.0) scale(0.5250)" opacity="0.35"><rect x="-100" y="-70" width="200" height="140" rx="12" class="sim-f-body sim-s-run" stroke-width="1.5" vector-effect="non-scaling-stroke"/><rect x="30" y="-66" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="30" y="44" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="-90" y="-66" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="-90" y="44" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="90" y="-40" width="10" height="80" class="sim-f-run"/><path d="M -25 0 L 70 0 M 45 -18 L 70 0 L 45 18" fill="none" class="sim-s-run" stroke-width="2" vector-effect="non-scaling-stroke"/><rect x="50" y="-78" width="20" height="12" class="sim-f-left"/></g>
+<g transform="translate(485.0 300.0) rotate(-0.0) scale(0.5250)"><line x1="100" y1="0" x2="900.0" y2="0" class="sim-s-front" stroke-width="1.5" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/></g>
+<g transform="translate(485.0 300.0) rotate(-0.0) scale(0.5250)"><rect x="-100" y="-70" width="200" height="140" rx="12" class="sim-f-body sim-s-run" stroke-width="1.5" vector-effect="non-scaling-stroke"/><rect x="30" y="-66" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="30" y="44" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="-90" y="-66" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="-90" y="44" width="60" height="22" rx="5" class="sim-f-wall"/><rect x="90" y="-40" width="10" height="80" class="sim-f-run"/><path d="M -25 0 L 70 0 M 45 -18 L 70 0 L 45 18" fill="none" class="sim-s-run" stroke-width="2" vector-effect="non-scaling-stroke"/><rect x="50" y="-78" width="20" height="12" class="sim-f-left"/></g>
+</g>
+<text x="70" y="578.0" class="sim-title">Front sensor reading (red bars: no valid reading)</text>
+<line x1="70.0" y1="590.0" x2="70.0" y2="770.0" class="sim-grid"/>
+<text x="70.0" y="785.0" class="sim-tick" text-anchor="middle">0</text>
+<line x1="208.3" y1="590.0" x2="208.3" y2="770.0" class="sim-grid"/>
+<text x="208.3" y="785.0" class="sim-tick" text-anchor="middle">0.5</text>
+<line x1="346.7" y1="590.0" x2="346.7" y2="770.0" class="sim-grid"/>
+<text x="346.7" y="785.0" class="sim-tick" text-anchor="middle">1</text>
+<line x1="485.0" y1="590.0" x2="485.0" y2="770.0" class="sim-grid"/>
+<text x="485.0" y="785.0" class="sim-tick" text-anchor="middle">1.5</text>
+<line x1="623.3" y1="590.0" x2="623.3" y2="770.0" class="sim-grid"/>
+<text x="623.3" y="785.0" class="sim-tick" text-anchor="middle">2</text>
+<line x1="761.7" y1="590.0" x2="761.7" y2="770.0" class="sim-grid"/>
+<text x="761.7" y="785.0" class="sim-tick" text-anchor="middle">2.5</text>
+<line x1="900.0" y1="590.0" x2="900.0" y2="770.0" class="sim-grid"/>
+<text x="900.0" y="785.0" class="sim-tick" text-anchor="middle">3</text>
+<line x1="70" y1="770.0" x2="900" y2="770.0" class="sim-grid"/>
+<text x="64" y="774.0" class="sim-tick" text-anchor="end">0</text>
+<line x1="70" y1="730.2" x2="900" y2="730.2" class="sim-grid"/>
+<text x="64" y="734.2" class="sim-tick" text-anchor="end">200</text>
+<line x1="70" y1="690.4" x2="900" y2="690.4" class="sim-grid"/>
+<text x="64" y="694.4" class="sim-tick" text-anchor="end">400</text>
+<line x1="70" y1="650.6" x2="900" y2="650.6" class="sim-grid"/>
+<text x="64" y="654.6" class="sim-tick" text-anchor="end">600</text>
+<line x1="70" y1="610.7" x2="900" y2="610.7" class="sim-grid"/>
+<text x="64" y="614.7" class="sim-tick" text-anchor="end">800</text>
+<rect x="70" y="590.0" width="830" height="180" class="sim-frame"/>
+<text x="900" y="800.0" class="sim-label" text-anchor="end">time (s)</text>
+<text x="20" y="680.0" class="sim-label" text-anchor="middle" transform="rotate(-90 20 680.0)">front_mm</text>
+<polyline points="72.8,610.7 81.1,610.7 89.4,610.7 97.7,610.7 106.0,610.7 114.3,610.7 122.6,610.7 130.9,610.7 139.2,610.7 147.5,610.7 155.8,610.7 164.1,610.7 172.4,610.7 180.7,610.7 189.0,610.7 197.3,610.7 205.6,610.7 213.9,610.7 222.2,610.7 230.5,610.7 238.8,610.7 247.1,610.7 255.4,610.7 263.7,610.7 272.0,610.7 280.3,610.7 288.6,610.7 296.9,610.7 305.2,610.7 313.5,610.7 321.8,610.7 330.1,610.7 338.4,610.7 346.7,610.7 355.0,610.7 363.3,610.7 371.6,610.7 379.9,610.7 388.2,610.7 396.5,610.7 404.8,610.7 413.1,610.7 421.4,610.7 429.7,610.7 438.0,610.7 446.3,610.7 454.6,610.7 462.9,610.7 471.2,610.7 479.5,610.7 487.8,610.7 496.1,610.7 504.4,610.7 512.7,610.7 521.0,610.7 529.3,610.7 537.6,610.7 545.9,610.7 554.2,610.7 562.5,610.7 570.8,610.7 579.1,610.7 587.4,610.7 595.7,610.7 604.0,610.7 612.3,610.7 620.6,610.7 628.9,610.7 637.2,610.7 645.5,610.7 653.8,610.7 662.1,610.7 670.4,610.7 678.7,610.7 687.0,610.7 695.3,610.7 703.6,610.7 711.9,610.7 720.2,610.7 728.5,610.7 736.8,610.7 745.1,610.7 753.4,610.7 761.7,610.7 770.0,610.7 778.3,610.7 786.6,610.7 794.9,610.7 803.2,610.7 811.5,610.7 819.8,610.7 828.1,610.7 836.4,610.7 844.7,610.7 853.0,610.7 861.3,610.7 869.6,610.7 877.9,610.7 886.2,610.7 894.5,610.7 900.0,610.7" fill="none" class="sim-s-wall" stroke-width="1" stroke-linejoin="round" stroke-dasharray="3 3"/>
+<circle cx="86.6" cy="607.2" r="1.6" class="sim-f-run"/>
+<circle cx="103.2" cy="606.4" r="1.6" class="sim-f-run"/>
+<circle cx="119.8" cy="614.3" r="1.6" class="sim-f-run"/>
+<circle cx="136.4" cy="611.5" r="1.6" class="sim-f-run"/>
+<circle cx="153.0" cy="612.1" r="1.6" class="sim-f-run"/>
+<circle cx="169.6" cy="609.7" r="1.6" class="sim-f-run"/>
+<circle cx="186.2" cy="612.5" r="1.6" class="sim-f-run"/>
+<circle cx="202.8" cy="610.9" r="1.6" class="sim-f-run"/>
+<circle cx="219.4" cy="610.7" r="1.6" class="sim-f-run"/>
+<circle cx="236.0" cy="611.7" r="1.6" class="sim-f-run"/>
+<circle cx="252.6" cy="612.7" r="1.6" class="sim-f-run"/>
+<circle cx="269.2" cy="610.5" r="1.6" class="sim-f-run"/>
+<circle cx="285.8" cy="608.8" r="1.6" class="sim-f-run"/>
+<circle cx="302.4" cy="609.2" r="1.6" class="sim-f-run"/>
+<circle cx="319.0" cy="614.1" r="1.6" class="sim-f-run"/>
+<circle cx="335.6" cy="611.7" r="1.6" class="sim-f-run"/>
+<circle cx="352.2" cy="610.1" r="1.6" class="sim-f-run"/>
+<circle cx="368.8" cy="608.8" r="1.6" class="sim-f-run"/>
+<circle cx="385.4" cy="609.2" r="1.6" class="sim-f-run"/>
+<circle cx="402.0" cy="609.3" r="1.6" class="sim-f-run"/>
+<circle cx="418.6" cy="612.9" r="1.6" class="sim-f-run"/>
+<circle cx="435.2" cy="610.5" r="1.6" class="sim-f-run"/>
+<circle cx="451.8" cy="614.1" r="1.6" class="sim-f-run"/>
+<circle cx="468.4" cy="610.1" r="1.6" class="sim-f-run"/>
+<circle cx="485.0" cy="614.5" r="1.6" class="sim-f-run"/>
+<circle cx="501.6" cy="616.1" r="1.6" class="sim-f-run"/>
+<circle cx="518.2" cy="610.7" r="1.6" class="sim-f-run"/>
+<circle cx="534.8" cy="611.9" r="1.6" class="sim-f-run"/>
+<circle cx="551.4" cy="609.2" r="1.6" class="sim-f-run"/>
+<circle cx="568.0" cy="609.3" r="1.6" class="sim-f-run"/>
+<circle cx="584.6" cy="612.3" r="1.6" class="sim-f-run"/>
+<circle cx="601.2" cy="613.3" r="1.6" class="sim-f-run"/>
+<circle cx="617.8" cy="609.3" r="1.6" class="sim-f-run"/>
+<circle cx="634.4" cy="609.7" r="1.6" class="sim-f-run"/>
+<circle cx="651.0" cy="614.5" r="1.6" class="sim-f-run"/>
+<circle cx="667.6" cy="609.5" r="1.6" class="sim-f-run"/>
+<circle cx="684.2" cy="611.1" r="1.6" class="sim-f-run"/>
+<circle cx="700.8" cy="610.7" r="1.6" class="sim-f-run"/>
+<circle cx="717.4" cy="610.3" r="1.6" class="sim-f-run"/>
+<circle cx="734.0" cy="608.8" r="1.6" class="sim-f-run"/>
+<circle cx="750.6" cy="608.2" r="1.6" class="sim-f-run"/>
+<circle cx="767.2" cy="615.1" r="1.6" class="sim-f-run"/>
+<circle cx="783.8" cy="611.9" r="1.6" class="sim-f-run"/>
+<circle cx="800.4" cy="615.5" r="1.6" class="sim-f-run"/>
+<circle cx="817.0" cy="611.1" r="1.6" class="sim-f-run"/>
+<circle cx="833.6" cy="609.7" r="1.6" class="sim-f-run"/>
+<circle cx="850.2" cy="612.1" r="1.6" class="sim-f-run"/>
+<circle cx="866.8" cy="610.5" r="1.6" class="sim-f-run"/>
+<circle cx="883.4" cy="608.8" r="1.6" class="sim-f-run"/>
+<circle cx="900.0" cy="607.2" r="1.6" class="sim-f-run"/>
+<rect x="570" y="569.0" width="14" height="4" class="sim-f-run"/>
+<text x="590" y="574.0" class="sim-tick">reading</text>
+<rect x="649" y="569.0" width="14" height="4" class="sim-f-wall"/>
+<text x="669" y="574.0" class="sim-tick">sensor to wall, straight ahead</text>
+<text x="70" y="838.0" class="sim-title">Heading (positive: turned left)</text>
+<line x1="70.0" y1="850.0" x2="70.0" y2="990.0" class="sim-grid"/>
+<text x="70.0" y="1005.0" class="sim-tick" text-anchor="middle">0</text>
+<line x1="208.3" y1="850.0" x2="208.3" y2="990.0" class="sim-grid"/>
+<text x="208.3" y="1005.0" class="sim-tick" text-anchor="middle">0.5</text>
+<line x1="346.7" y1="850.0" x2="346.7" y2="990.0" class="sim-grid"/>
+<text x="346.7" y="1005.0" class="sim-tick" text-anchor="middle">1</text>
+<line x1="485.0" y1="850.0" x2="485.0" y2="990.0" class="sim-grid"/>
+<text x="485.0" y="1005.0" class="sim-tick" text-anchor="middle">1.5</text>
+<line x1="623.3" y1="850.0" x2="623.3" y2="990.0" class="sim-grid"/>
+<text x="623.3" y="1005.0" class="sim-tick" text-anchor="middle">2</text>
+<line x1="761.7" y1="850.0" x2="761.7" y2="990.0" class="sim-grid"/>
+<text x="761.7" y="1005.0" class="sim-tick" text-anchor="middle">2.5</text>
+<line x1="900.0" y1="850.0" x2="900.0" y2="990.0" class="sim-grid"/>
+<text x="900.0" y="1005.0" class="sim-tick" text-anchor="middle">3</text>
+<line x1="70" y1="990.0" x2="900" y2="990.0" class="sim-grid"/>
+<text x="64" y="994.0" class="sim-tick" text-anchor="end">-15</text>
+<line x1="70" y1="966.7" x2="900" y2="966.7" class="sim-grid"/>
+<text x="64" y="970.7" class="sim-tick" text-anchor="end">-10</text>
+<line x1="70" y1="943.3" x2="900" y2="943.3" class="sim-grid"/>
+<text x="64" y="947.3" class="sim-tick" text-anchor="end">-5</text>
+<line x1="70" y1="920.0" x2="900" y2="920.0" class="sim-grid"/>
+<text x="64" y="924.0" class="sim-tick" text-anchor="end">0</text>
+<line x1="70" y1="896.7" x2="900" y2="896.7" class="sim-grid"/>
+<text x="64" y="900.7" class="sim-tick" text-anchor="end">5</text>
+<line x1="70" y1="873.3" x2="900" y2="873.3" class="sim-grid"/>
+<text x="64" y="877.3" class="sim-tick" text-anchor="end">10</text>
+<line x1="70" y1="850.0" x2="900" y2="850.0" class="sim-grid"/>
+<text x="64" y="854.0" class="sim-tick" text-anchor="end">15</text>
+<rect x="70" y="850.0" width="830" height="140" class="sim-frame"/>
+<text x="900" y="1020.0" class="sim-label" text-anchor="end">time (s)</text>
+<text x="20" y="920.0" class="sim-label" text-anchor="middle" transform="rotate(-90 20 920.0)">heading (deg)</text>
+<polyline points="72.8,920.0 81.1,920.0 89.4,920.0 97.7,920.0 106.0,920.0 114.3,920.0 122.6,920.0 130.9,920.0 139.2,920.0 147.5,920.0 155.8,920.0 164.1,920.0 172.4,920.0 180.7,920.0 189.0,920.0 197.3,920.0 205.6,920.0 213.9,920.0 222.2,920.0 230.5,920.0 238.8,920.0 247.1,920.0 255.4,920.0 263.7,920.0 272.0,920.0 280.3,920.0 288.6,920.0 296.9,920.0 305.2,920.0 313.5,920.0 321.8,920.0 330.1,920.0 338.4,920.0 346.7,920.0 355.0,920.0 363.3,920.0 371.6,920.0 379.9,920.0 388.2,920.0 396.5,920.0 404.8,920.0 413.1,920.0 421.4,920.0 429.7,920.0 438.0,920.0 446.3,920.0 454.6,920.0 462.9,920.0 471.2,920.0 479.5,920.0 487.8,920.0 496.1,920.0 504.4,920.0 512.7,920.0 521.0,920.0 529.3,920.0 537.6,920.0 545.9,920.0 554.2,920.0 562.5,920.0 570.8,920.0 579.1,920.0 587.4,920.0 595.7,920.0 604.0,920.0 612.3,920.0 620.6,920.0 628.9,920.0 637.2,920.0 645.5,920.0 653.8,920.0 662.1,920.0 670.4,920.0 678.7,920.0 687.0,920.0 695.3,920.0 703.6,920.0 711.9,920.0 720.2,920.0 728.5,920.0 736.8,920.0 745.1,920.0 753.4,920.0 761.7,920.0 770.0,920.0 778.3,920.0 786.6,920.0 794.9,920.0 803.2,920.0 811.5,920.0 819.8,920.0 828.1,920.0 836.4,920.0 844.7,920.0 853.0,920.0 861.3,920.0 869.6,920.0 877.9,920.0 886.2,920.0 894.5,920.0 900.0,920.0" fill="none" class="sim-s-run" stroke-width="1.6" stroke-linejoin="round"/>
+<text x="70" y="1058.0" class="sim-title">Wheel commands</text>
+<line x1="70.0" y1="1070.0" x2="70.0" y2="1230.0" class="sim-grid"/>
+<text x="70.0" y="1245.0" class="sim-tick" text-anchor="middle">0</text>
+<line x1="208.3" y1="1070.0" x2="208.3" y2="1230.0" class="sim-grid"/>
+<text x="208.3" y="1245.0" class="sim-tick" text-anchor="middle">0.5</text>
+<line x1="346.7" y1="1070.0" x2="346.7" y2="1230.0" class="sim-grid"/>
+<text x="346.7" y="1245.0" class="sim-tick" text-anchor="middle">1</text>
+<line x1="485.0" y1="1070.0" x2="485.0" y2="1230.0" class="sim-grid"/>
+<text x="485.0" y="1245.0" class="sim-tick" text-anchor="middle">1.5</text>
+<line x1="623.3" y1="1070.0" x2="623.3" y2="1230.0" class="sim-grid"/>
+<text x="623.3" y="1245.0" class="sim-tick" text-anchor="middle">2</text>
+<line x1="761.7" y1="1070.0" x2="761.7" y2="1230.0" class="sim-grid"/>
+<text x="761.7" y="1245.0" class="sim-tick" text-anchor="middle">2.5</text>
+<line x1="900.0" y1="1070.0" x2="900.0" y2="1230.0" class="sim-grid"/>
+<text x="900.0" y="1245.0" class="sim-tick" text-anchor="middle">3</text>
+<line x1="70" y1="1230.0" x2="900" y2="1230.0" class="sim-grid"/>
+<text x="64" y="1234.0" class="sim-tick" text-anchor="end">-20</text>
+<line x1="70" y1="1190.0" x2="900" y2="1190.0" class="sim-grid"/>
+<text x="64" y="1194.0" class="sim-tick" text-anchor="end">-10</text>
+<line x1="70" y1="1150.0" x2="900" y2="1150.0" class="sim-grid"/>
+<text x="64" y="1154.0" class="sim-tick" text-anchor="end">0</text>
+<line x1="70" y1="1110.0" x2="900" y2="1110.0" class="sim-grid"/>
+<text x="64" y="1114.0" class="sim-tick" text-anchor="end">10</text>
+<line x1="70" y1="1070.0" x2="900" y2="1070.0" class="sim-grid"/>
+<text x="64" y="1074.0" class="sim-tick" text-anchor="end">20</text>
+<rect x="70" y="1070.0" width="830" height="160" class="sim-frame"/>
+<text x="900" y="1260.0" class="sim-label" text-anchor="end">time (s)</text>
+<text x="20" y="1150.0" class="sim-label" text-anchor="middle" transform="rotate(-90 20 1150.0)">command (-255 to 255)</text>
+<polyline points="72.8,1150.0 81.1,1150.0 89.4,1150.0 97.7,1150.0 106.0,1150.0 114.3,1150.0 122.6,1150.0 130.9,1150.0 139.2,1150.0 147.5,1150.0 155.8,1150.0 164.1,1150.0 172.4,1150.0 180.7,1150.0 189.0,1150.0 197.3,1150.0 205.6,1150.0 213.9,1150.0 222.2,1150.0 230.5,1150.0 238.8,1150.0 247.1,1150.0 255.4,1150.0 263.7,1150.0 272.0,1150.0 280.3,1150.0 288.6,1150.0 296.9,1150.0 305.2,1150.0 313.5,1150.0 321.8,1150.0 330.1,1150.0 338.4,1150.0 346.7,1150.0 355.0,1150.0 363.3,1150.0 371.6,1150.0 379.9,1150.0 388.2,1150.0 396.5,1150.0 404.8,1150.0 413.1,1150.0 421.4,1150.0 429.7,1150.0 438.0,1150.0 446.3,1150.0 454.6,1150.0 462.9,1150.0 471.2,1150.0 479.5,1150.0 487.8,1150.0 496.1,1150.0 504.4,1150.0 512.7,1150.0 521.0,1150.0 529.3,1150.0 537.6,1150.0 545.9,1150.0 554.2,1150.0 562.5,1150.0 570.8,1150.0 579.1,1150.0 587.4,1150.0 595.7,1150.0 604.0,1150.0 612.3,1150.0 620.6,1150.0 628.9,1150.0 637.2,1150.0 645.5,1150.0 653.8,1150.0 662.1,1150.0 670.4,1150.0 678.7,1150.0 687.0,1150.0 695.3,1150.0 703.6,1150.0 711.9,1150.0 720.2,1150.0 728.5,1150.0 736.8,1150.0 745.1,1150.0 753.4,1150.0 761.7,1150.0 770.0,1150.0 778.3,1150.0 786.6,1150.0 794.9,1150.0 803.2,1150.0 811.5,1150.0 819.8,1150.0 828.1,1150.0 836.4,1150.0 844.7,1150.0 853.0,1150.0 861.3,1150.0 869.6,1150.0 877.9,1150.0 886.2,1150.0 894.5,1150.0 900.0,1150.0" fill="none" class="sim-s-left" stroke-width="1.3" stroke-linejoin="round"/>
+<polyline points="72.8,1150.0 81.1,1150.0 89.4,1150.0 97.7,1150.0 106.0,1150.0 114.3,1150.0 122.6,1150.0 130.9,1150.0 139.2,1150.0 147.5,1150.0 155.8,1150.0 164.1,1150.0 172.4,1150.0 180.7,1150.0 189.0,1150.0 197.3,1150.0 205.6,1150.0 213.9,1150.0 222.2,1150.0 230.5,1150.0 238.8,1150.0 247.1,1150.0 255.4,1150.0 263.7,1150.0 272.0,1150.0 280.3,1150.0 288.6,1150.0 296.9,1150.0 305.2,1150.0 313.5,1150.0 321.8,1150.0 330.1,1150.0 338.4,1150.0 346.7,1150.0 355.0,1150.0 363.3,1150.0 371.6,1150.0 379.9,1150.0 388.2,1150.0 396.5,1150.0 404.8,1150.0 413.1,1150.0 421.4,1150.0 429.7,1150.0 438.0,1150.0 446.3,1150.0 454.6,1150.0 462.9,1150.0 471.2,1150.0 479.5,1150.0 487.8,1150.0 496.1,1150.0 504.4,1150.0 512.7,1150.0 521.0,1150.0 529.3,1150.0 537.6,1150.0 545.9,1150.0 554.2,1150.0 562.5,1150.0 570.8,1150.0 579.1,1150.0 587.4,1150.0 595.7,1150.0 604.0,1150.0 612.3,1150.0 620.6,1150.0 628.9,1150.0 637.2,1150.0 645.5,1150.0 653.8,1150.0 662.1,1150.0 670.4,1150.0 678.7,1150.0 687.0,1150.0 695.3,1150.0 703.6,1150.0 711.9,1150.0 720.2,1150.0 728.5,1150.0 736.8,1150.0 745.1,1150.0 753.4,1150.0 761.7,1150.0 770.0,1150.0 778.3,1150.0 786.6,1150.0 794.9,1150.0 803.2,1150.0 811.5,1150.0 819.8,1150.0 828.1,1150.0 836.4,1150.0 844.7,1150.0 853.0,1150.0 861.3,1150.0 869.6,1150.0 877.9,1150.0 886.2,1150.0 894.5,1150.0 900.0,1150.0" fill="none" class="sim-s-right" stroke-width="1.3" stroke-linejoin="round"/>
+<rect x="76" y="1266.0" width="14" height="4" class="sim-f-left"/>
+<text x="96" y="1271.0" class="sim-tick">left</text>
+<rect x="134" y="1266.0" width="14" height="4" class="sim-f-right"/>
+<text x="154" y="1271.0" class="sim-tick">right</text>
+</svg>

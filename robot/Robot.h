@@ -195,8 +195,8 @@ private:
 
     // Application de la correction
     float corr = p * 0.4 + i * 0.09 - d * 80;
-    corr *= -1; // Laisser juste pour la simulation
-    drive(baseSpeed-0.1*corr, baseSpeed+0.1*corr, 200);
+    // corr *= -1; // Laisser juste pour la simulation
+    drive(baseSpeed+0.1*corr, baseSpeed-0.1*corr, 200);
 
     old_ms = nowMs();
   }

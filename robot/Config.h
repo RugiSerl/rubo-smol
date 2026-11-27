@@ -123,7 +123,7 @@
 #define FRONT_SENSOR_ENABLED  true
 #define FRONT_SENSOR_PIN      18      // D18 socket
 
-#define SIDE_SENSOR_ENABLED   false
+#define SIDE_SENSOR_ENABLED   true
 #define SIDE_SENSOR_SDA_PIN   20      // I2C0, Pico header pin 26
 #define SIDE_SENSOR_SCL_PIN   21      // I2C0, Pico header pin 27
 
