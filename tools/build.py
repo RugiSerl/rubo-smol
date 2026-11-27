@@ -9,11 +9,16 @@ Build the robot firmware.
 The result is build/robot.uf2. --flash uses tools/pico.py to reboot a running
 Pico into BOOTSEL mode and load it. A crashed program may need manual BOOTSEL.
 
+Before building, the JavaScript in robot/web/ is checked for syntax errors
+with Node. A module that does not parse stops the whole phone page from
+loading, while the robot still boots and shows its address.
+
 The build also updates VS Code's C/C++ configuration from CMake's
 compile_commands.json.
 """
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -23,12 +28,60 @@ REPO = Path(__file__).resolve().parent.parent
 SDK = REPO / ".pico-sdk"
 SKETCH = REPO / "robot"
 BUILD = REPO / "build"
+WEB = SKETCH / "web"
 UF2 = BUILD / "robot.uf2"
 
 
 def require_sdk():
     if not (SDK / "pico_sdk_init.cmake").exists():
         sys.exit("Pico SDK missing -- run: python3 tools/setup.py")
+
+
+def syntax_error(source, name):
+    """Node's report on source as an ES module, or None if it parses."""
+    # Through stdin with --input-type=module: Node 20 runs `node --check` on a
+    # .js file as CommonJS, and passes a broken ES module without a word.
+    result = subprocess.run(["node", "--input-type=module", "--check"],
+                            input=source, capture_output=True, text=True)
+    if result.returncode == 0:
+        return None
+    # Keep the location, the line, the caret and the message; drop the stack
+    # trace, which points inside Node.
+    report = []
+    for line in result.stderr.replace("[stdin]", name).splitlines():
+        if line.startswith("    at "):
+            break
+        report.append(line)
+    return "\n".join(report).strip()
+
+
+def check_web():
+    """Refuse to build a phone page whose JavaScript does not parse."""
+    if shutil.which("node") is None:
+        print("note: node not found, robot/web/ JavaScript not checked")
+        return
+
+    errors = []
+    for path in sorted(WEB.glob("*.js")):
+        error = syntax_error(path.read_text(), str(path.relative_to(REPO)))
+        if error:
+            errors.append(error)
+
+    # The <script type="module"> blocks inside the HTML pages. Each is padded
+    # with the newlines that come before it, so line numbers match the file.
+    for path in sorted(WEB.glob("*.html")):
+        text = path.read_text()
+        for match in re.finditer(r'<script type="module">(.*?)</script>', text, re.DOTALL):
+            padding = "\n" * text.count("\n", 0, match.start(1))
+            error = syntax_error(padding + match.group(1), str(path.relative_to(REPO)))
+            if error:
+                errors.append(error)
+
+    if errors:
+        print("\n\n".join(errors))
+        print()
+        sys.exit("JavaScript error in robot/web/: the phone page would not load. "
+                 "Fix the line above and build again.")
 
 
 def configure():
@@ -110,6 +163,7 @@ def flash():
 
 def main():
     require_sdk()
+    check_web()
 
     if "--clean" in sys.argv and BUILD.exists():
         shutil.rmtree(BUILD)

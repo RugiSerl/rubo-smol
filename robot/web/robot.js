@@ -19,6 +19,17 @@ export const POLL_MS = 100;         // how often to ask the robot for news
 const LINK_LOST_MS = 1000;          // no answer for this long: show the link as down
 const SEND_RETRIES = 3;             // a command that did not get through is sent again
 const SEND_RETRY_MS = 100;
+const SEND_TIMEOUT_MS = 1000;       // a command not answered by then is sent again
+const POLL_TIMEOUT_MS = 2000;       // a poll not answered by then is given up
+
+// A fetch() has no deadline of its own: on a connection the robot dropped, it
+// can wait for minutes, and the loop that awaits it waits too. This signal
+// cancels it after `ms`.
+function deadline(ms) {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), ms);
+  return controller.signal;
+}
 
 /** A few numbers about a delay: the last one, the average, the worst. */
 export class Stats {
@@ -95,7 +106,8 @@ export class Robot {
     // is not.
     const body = JSON.stringify(command) + '\n';
     const attempt = (triesLeft) => {
-      fetch(this.base + '/api/command', { method: 'POST', body }).then((response) => {
+      fetch(this.base + '/api/command',
+            { method: 'POST', body, signal: deadline(SEND_TIMEOUT_MS) }).then((response) => {
         this.latency.request.add(performance.now() - sentAt);
         if (!response.ok) this._emit({ error: `the robot answered ${response.status}` });
       }).catch(() => {
@@ -162,7 +174,7 @@ export class Robot {
       const started = performance.now();
       try {
         const response = await fetch(`${this.base}/api/lines?after=${this._after}`,
-                                      { cache: 'no-store' });
+                                      { cache: 'no-store', signal: deadline(POLL_TIMEOUT_MS) });
         const lastLine = Number(response.headers.get('X-Last-Line'));
         const text = await response.text();
 

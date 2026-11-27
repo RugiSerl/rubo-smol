@@ -98,7 +98,14 @@ Le robot envoie son état dans la console cinq fois par seconde : c'est la tél�
 - **Aucun message au démarrage** : lancer `python3 tools/pico.py list`. `0003` indique le mode BOOTSEL ; `0009` ou `000a`, un programme en cours. Si le port série manque, rebrancher l'USB et relancer `tools/pico.py console`.
 - **`ENABLED BUT NOT RESPONDING` sur un télémètre** : vérifier D18 pour le capteur avant et, pour le latéral, SDA sur la broche 26 et SCL sur la 27. Le robot réessaie chaque seconde : une mesure peut apparaître sans redémarrer.
 - **Aucun moteur ne tourne, ou un seul sens fonctionne** : vérifier la masse commune (section 3), puis les cavaliers ENA et ENB. Si un moteur bourdonne, augmenter la vitesse demandée au-dessus de 100.
-- **Un côté tourne à l'envers** : inverser son réglage `*_MOTOR_REVERSED` dans `Config.h`, puis recompiler et recharger. Si le robot entier recule et que ses virages sont inversés, inverser les deux réglages **et** échanger les valeurs des broches `LEFT_MOTOR_PIN_A`/`_B` avec `RIGHT_MOTOR_PIN_A`/`_B`.
+- **Le robot recule, un côté tourne à l'envers, ou les virages sont inversés** : tester chaque côté seul dans la console, en corrigeant `Config.h` au fur et à mesure (recompiler et recharger après chaque modification).
+  1. Envoyer `{"left": 200, "right": 0}`. Seules les roues gauches doivent tourner, vers l'avant.
+     - Si ce sont les roues droites qui tournent, les moteurs gauches sont branchés sur IN3/IN4 et les droits sur IN1/IN2 : échanger les valeurs de `LEFT_MOTOR_PIN_A`/`_B` avec celles de `RIGHT_MOTOR_PIN_A`/`_B`, puis reprendre à l'étape 1.
+     - Si les roues gauches tournent vers l'arrière, inverser `LEFT_MOTOR_REVERSED`.
+  2. Envoyer `{"left": 0, "right": 200}`. Seules les roues droites doivent tourner, vers l'avant. Si elles tournent vers l'arrière, inverser `RIGHT_MOTOR_REVERSED`.
+  3. Vérifier : `{"left": 200, "right": 200}` fait avancer le robot, `{"left": -200, "right": 200}` le fait tourner sur place vers la gauche.
+
+  **Attention.** Un robot qui recule sur `{"left": 200, "right": 200}` peut avoir deux câblages différents. Si ses virages sont inversés, il suffit d'inverser les deux réglages `*_MOTOR_REVERSED`. Si ses virages sont corrects, il faut inverser les deux réglages et échanger les broches. Appliquer la mauvaise correction donne un robot qui avance droit mais tourne à l'envers. Les étapes 1 et 2 évitent d'avoir à faire la différence.
 - **Écran muet** : vérifier la prise I2C1 et le modèle du module. Le pilote ne prend pas en charge les cartes PCF8574. Si l'écran s'allume sans texte, régler le potentiomètre de contraste.
 
 ## Passer en WiFi

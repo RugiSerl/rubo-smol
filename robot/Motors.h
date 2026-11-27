@@ -121,16 +121,3 @@ private:
 #endif
   }
 };
-
-// Try this:
-//
-//   1. Add turn(int speed, int steering) so that steering = 0 goes straight
-//      and steering = +255 spins right on the spot. One line of arithmetic,
-//      then call set().
-//   2. Add a speed limit: a setMaxSpeed(int) that clamp() also respects, so a
-//      nervous first test run cannot go full tilt.
-//   3. Real motors do not start at the same speed. If your robot veers left
-//      when told to go straight, add a per-wheel trim in Config.h and apply
-//      it in set().
-//   4. Set MOTOR_PWM_FREQ_HZ to 500 and listen. You can HEAR the pulse width
-//      modulation, and the pitch is the frequency. Put it back afterwards.

@@ -35,7 +35,7 @@ The HTTP routes are listed in [`README.md` — HTTP interface](README.md#http-in
 
 ### Commands
 
-Each command is a flat JSON object. Over USB serial, send one object per line; `POST /api/command` accepts the same lines in its request body. Fields can be combined in one command. Use integers for speeds, times, mission numbers and tags; `stop` and `info` are booleans. `null` acts like an omitted field; fractional numbers, arrays and nested objects are rejected.
+Each command is a flat JSON object. Over USB serial, send one object per line; `POST /api/command` accepts the same lines in its request body. Fields can be combined in one command. Use integers for speeds, times, mission numbers and tags; `stop` and `info` are booleans. `null` acts like an omitted field; fractional numbers, arrays and nested objects are rejected. A string value counts as `0`: `{"stop":"true"}` does not stop. `client/simrobot.js` runs the firmware's own parser, and its `--sans-firmware` mode follows the same rules, so a page that sends `{"left":90.5}` gets the error there too.
 
 | Command                                     | Effect                                           |
 | ------------------------------------------- | ------------------------------------------------ |
@@ -227,7 +227,7 @@ Use `has()` to tell a missing field from zero. `execute()` must not wait. To sen
 
 ## robot.js API
 
-`robot/web/robot.js` is the ES module used by the phone page. The robot serves it with the page; edits need a rebuild and reflash, except against `client/fakerobot.js`, which reads it from disk.
+`robot/web/robot.js` is the ES module used by the phone page. The robot serves it with the page; edits need a rebuild and reflash, except against `client/simrobot.js`, which reads it from disk.
 
 ```js
 import { Robot, Mission } from './robot.js';

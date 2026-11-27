@@ -93,26 +93,3 @@ private:
   char   _buffer[MAX_LINE];
   size_t _length = 0;
 };
-
-// Try this:
-//
-//   1. Print a line when the phone page starts talking to the robot, and when
-//      it goes quiet, so you can see on the serial output exactly when the
-//      robot thinks it is alone. This one is in WebRadio.h, and there is no
-//      callback for it: HTTP has no connection that lasts, so nothing tells
-//      you the phone has gone. Where can you notice instead?
-//   2. WebRadio::begin() blocks for up to 20 seconds while it joins the WiFi.
-//      Rewrite it so the robot still runs (sensors, serial output) while it
-//      is trying to connect. Hint: it will have to become non-blocking, like
-//      everything else here.
-//   3. Switch RADIO in Config.h between the two and read main.cpp carefully.
-//      The radio line changes -- and a few others had to be wrapped in an
-//      #if. Find them, and work out what would have gone wrong without them.
-//      The interface protects everything that goes THROUGH it; serveCamera()
-//      never did. "It compiled" is not "it works".
-//   4. Under RADIO_SERIAL the telemetry and every printf() share one wire, and
-//      the clients cope by skipping lines that do not start with '{'. Do it
-//      properly instead: send the debug output to a hardware UART, with
-//      pico_enable_stdio_uart in CMakeLists.txt, read on GP0/GP1 with a
-//      USB-serial adapter. Then notice which two pins those are in Config.h,
-//      and say what you would have to give up. Most people take the '{' rule.

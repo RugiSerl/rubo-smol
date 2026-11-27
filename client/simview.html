@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot simulé</title>
+<!--
+  Served by client/simrobot.js at /sim: the phone page, as the robot serves
+  it, beside the simulated room seen from above. Not part of the robot.
+-->
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #202124; --muted: #5f6368; --line: #dadce0;
+    --wall: #202124; --obstacle: #a0662a; --robot: #1f6fd1; --body: #e8f0fb;
+    --front: rgba(123, 79, 201, 0.18); --side: rgba(209, 86, 31, 0.18); --trail: #9aa0a6;
+    --bad: #c5221f; --good: #1f8f5a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a; --panel: #202124; --text: #e8eaed; --muted: #9aa0a6; --line: #3c4043;
+      --wall: #e8eaed; --obstacle: #d29a5c; --robot: #8ab4f8; --body: #253246;
+      --front: rgba(177, 140, 255, 0.22); --side: rgba(255, 140, 90, 0.22); --trail: #5f6368;
+      --bad: #f28b82; --good: #81c995;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; }
+  .layout { display: flex; gap: 16px; padding: 16px; height: 100vh; }
+  iframe { width: 400px; flex: none; height: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .room { position: relative; flex: 1; min-height: 260px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .notice { position: absolute; left: 12px; top: 10px; right: 12px; color: var(--bad); font-weight: 600; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  label { color: var(--muted); }
+  .readout { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .readout b { color: var(--text); font-weight: 600; }
+  .up { color: var(--good); } .down { color: var(--bad); }
+  pre { margin: 0; max-height: 30vh; overflow: auto; padding: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-size: 12px; white-space: pre-wrap; }
+  pre:empty { display: none; }
+  @media (max-width: 800px) {
+    .layout { flex-direction: column; height: auto; }
+    iframe { width: 100%; height: 640px; }
+    .room { height: 60vh; flex: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <iframe src="/" title="Page du téléphone"></iframe>
+  <main>
+    <div class="room">
+      <canvas id="room"></canvas>
+      <div class="notice" id="notice"></div>
+    </div>
+    <div class="bar">
+      <button id="reload" title="Comme recompiler et recharger le robot">Recompiler Robot.h et redémarrer</button>
+      <button id="place" title="Le reposer à son point de départ, sans le redémarrer">Replacer le robot</button>
+      <button id="obstacle" hidden>Retirer l'obstacle</button>
+      <label><input type="checkbox" id="front"> capteur avant débranché</label>
+      <label><input type="checkbox" id="side"> capteur latéral débranché</label>
+    </div>
+    <div class="readout" id="readout"></div>
+    <pre id="message"></pre>
+  </main>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const canvas = $('room');
+const g = canvas.getContext('2d');
+
+let state = null;            // the latest answer to /sim/state
+let trail = [];              // where the robot has been, as [x, y]
+let version = -1;
+let view = null;             // how the room fits the canvas
+
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+// The walls less their gaps, as [ax, ay, bx, by, obstacle].
+function pieces(walls) {
+  const out = [];
+  for (const w of walls) {
+    const length = Math.hypot(w.bx - w.ax, w.by - w.ay);
+    const ux = (w.bx - w.ax) / length, uy = (w.by - w.ay) / length;
+    let at = 0;
+    for (const [a, b] of w.gaps) {
+      if (a > at) out.push([w.ax + ux * at, w.ay + uy * at, w.ax + ux * a, w.ay + uy * a, w.obstacle]);
+      at = Math.max(at, b);
+    }
+    if (at < length) out.push([w.ax + ux * at, w.ay + uy * at, w.bx, w.by, w.obstacle]);
+  }
+  return out;
+}
+
+// The part of the scene near the start. A scene larger than that (the
+// endless wall of "mur") is followed: the view moves with the robot.
+function fit(world) {
+  const [sx, sy] = world.scene.start;
+  let x0 = sx - 600, x1 = sx + 600, y0 = sy - 600, y1 = sy + 600;
+  for (const [ax, ay, bx, by] of pieces(world.walls)) {
+    for (const [px, py] of [[ax, ay], [bx, by]]) {
+      const cx = Math.max(sx - 5000, Math.min(sx + 5000, px));
+      const cy = Math.max(sy - 5000, Math.min(sy + 5000, py));
+      x0 = Math.min(x0, cx); x1 = Math.max(x1, cx); y0 = Math.min(y0, cy); y1 = Math.max(y1, cy);
+    }
+  }
+  const follow = x1 - x0 > 6000 || y1 - y0 > 6000;
+  return { x0: x0 - 300, x1: x1 + 300, y0: y0 - 300, y1: y1 + 300, follow };
+}
+
+function draw() {
+  requestAnimationFrame(draw);
+  const ratio = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * ratio) || canvas.height !== Math.round(h * ratio)) {
+    canvas.width = Math.round(w * ratio);
+    canvas.height = Math.round(h * ratio);
+  }
+  g.setTransform(ratio, 0, 0, ratio, 0, 0);
+  g.clearRect(0, 0, w, h);
+  if (!state || !state.firmware || !state.world || !state.world.scene || !state.pose) return;
+
+  const world = state.world, pose = state.pose, robot = world.robot;
+  // Millimetres to pixels, the same both ways.
+  let cx, cy, k;
+  if (view.follow) {
+    k = Math.min(w / 4000, h / 3000);
+    cx = pose.x; cy = pose.y;
+  } else {
+    k = Math.min(w / (view.x1 - view.x0), h / (view.y1 - view.y0));
+    cx = (view.x0 + view.x1) / 2; cy = (view.y0 + view.y1) / 2;
+  }
+  const X = (x) => w / 2 + (x - cx) * k;
+  const Y = (y) => h / 2 - (y - cy) * k;
+
+  // A grid every 500 mm.
+  g.strokeStyle = css('--line');
+  g.lineWidth = 1;
+  g.beginPath();
+  for (let x = Math.ceil((cx - w / 2 / k) / 500) * 500; x < cx + w / 2 / k; x += 500) { g.moveTo(X(x), 0); g.lineTo(X(x), h); }
+  for (let y = Math.ceil((cy - h / 2 / k) / 500) * 500; y < cy + h / 2 / k; y += 500) { g.moveTo(0, Y(y)); g.lineTo(w, Y(y)); }
+  g.stroke();
+
+  // Walls; the obstacle in its own colour, dashed once taken away.
+  g.lineCap = 'round';
+  for (const [ax, ay, bx, by, obstacle] of pieces(world.walls)) {
+    g.strokeStyle = css(obstacle ? '--obstacle' : '--wall');
+    g.lineWidth = Math.max(3, 25 * k);
+    g.setLineDash(obstacle && !pose.obstacle ? [8, 8] : []);
+    g.globalAlpha = obstacle && !pose.obstacle ? 0.4 : 1;
+    g.beginPath(); g.moveTo(X(ax), Y(ay)); g.lineTo(X(bx), Y(by)); g.stroke();
+  }
+  g.setLineDash([]);
+  g.globalAlpha = 1;
+
+  // Where it has been.
+  g.strokeStyle = css('--trail');
+  g.lineWidth = 1.5;
+  g.beginPath();
+  trail.forEach(([x, y], i) => (i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))));
+  g.stroke();
+
+  // The robot, in its own frame: x forward, y to its left, in mm.
+  const a = pose.heading * Math.PI / 180;
+  g.save();
+  g.translate(X(pose.x), Y(pose.y));
+  g.rotate(-a);
+  g.scale(k, -k);
+  const L = robot.half_length, W = robot.half_width;
+  // The sensors' cones, as far as their reading, or faint when they read nothing.
+  const cone = (fx, fy, angle, half, reach, colour) => {
+    g.fillStyle = css(colour);
+    g.beginPath();
+    g.moveTo(fx, fy);
+    g.arc(fx, fy, reach, angle - half * Math.PI / 180, angle + half * Math.PI / 180);
+    g.closePath();
+    g.fill();
+  };
+  g.globalAlpha = pose.front_ok ? 1 : 0.35;
+  cone(L, 0, 0, robot.front_cone, pose.front_ok ? pose.front_mm : 250, '--front');
+  g.globalAlpha = pose.side_ok ? 1 : 0.35;
+  cone(robot.side_ahead, W, Math.PI / 2, robot.side_cone, pose.side_ok ? pose.side_mm : 200, '--side');
+  g.globalAlpha = 1;
+  g.fillStyle = css('--body');
+  g.strokeStyle = css(pose.bumping ? '--bad' : '--robot');
+  g.lineWidth = (pose.bumping ? 3 : 1.5) / k;
+  g.beginPath();
+  g.roundRect(-L, -W, 2 * L, 2 * W, 12);
+  g.fill(); g.stroke();
+  g.fillStyle = css('--wall');
+  for (const wx of [L - 40, -(L - 40)]) for (const wy of [W - 26, -W + 4]) g.fillRect(wx - 30, wy, 60, 22);
+  g.fillStyle = css('--robot');
+  g.fillRect(L - 10, -W + 30, 10, 2 * W - 60);
+  g.beginPath();
+  g.moveTo(-25, 0); g.lineTo(L - 30, 0);
+  g.moveTo(L - 55, -18); g.lineTo(L - 30, 0); g.lineTo(L - 55, 18);
+  g.strokeStyle = css('--robot');
+  g.lineWidth = 2 / k;
+  g.stroke();
+  g.restore();
+}
+
+function mm(ok, value) { return ok ? `${value} mm` : '—'; }
+
+function show() {
+  if (!state) return;
+  if (!state.firmware) {
+    $('notice').textContent = 'Lancé avec --sans-firmware : pas de salle à montrer.';
+    $('readout').textContent = '';
+    return;
+  }
+  const pose = state.pose;
+  const down = { stuck: 'Robot.h est bloqué dans une boucle : le robot ne répond plus.',
+                 crashed: 'Le programme du robot s\'est arrêté : le robot ne répond plus.',
+                 stopped: 'Le programme du robot s\'est arrêté.' }[state.status];
+  $('notice').textContent = down || (pose && pose.bumping ? 'Contre un mur' : '');
+  if (down && state.message && !$('message').textContent) $('message').textContent = state.message;
+  if (!pose) return;
+  $('readout').innerHTML =
+    `liaison <b class="${pose.linked ? 'up' : 'down'}">${pose.linked ? 'active' : 'perdue'}</b>` +
+    ` · roues <b>${pose.left}</b> / <b>${pose.right}</b>` +
+    ` · avant <b>${mm(pose.front_ok, pose.front_mm)}</b>` +
+    ` · côté <b>${mm(pose.side_ok, pose.side_mm)}</b>` +
+    ` · position <b>${Math.round(pose.x)}</b>, <b>${Math.round(pose.y)}</b> mm` +
+    ` · <b>${(pose.ms / 1000).toFixed(1)}</b> s depuis le démarrage`;
+  const hasObstacle = state.world.walls.some((w) => w.obstacle);
+  $('obstacle').hidden = !hasObstacle;
+  $('obstacle').textContent = pose.obstacle ? 'Retirer l\'obstacle' : 'Remettre l\'obstacle';
+  $('front').checked = pose.front_unplugged;
+  $('side').checked = pose.side_unplugged;
+}
+
+async function poll() {
+  try {
+    const response = await fetch('/sim/state');
+    state = await response.json();
+    if (state.firmware && state.world && state.world.scene) {
+      if (state.version !== version) {
+        version = state.version;
+        view = fit(state.world);
+        trail = [];
+      }
+      if (state.pose) {
+        const last = trail[trail.length - 1];
+        if (!last || Math.hypot(last[0] - state.pose.x, last[1] - state.pose.y) > 5) trail.push([state.pose.x, state.pose.y]);
+        if (trail.length > 2000) trail.shift();
+      }
+    }
+    show();
+  } catch (error) {
+    $('notice').textContent = 'client/simrobot.js ne répond plus.';
+  }
+  setTimeout(poll, 50);
+}
+
+async function post(path) {
+  const response = await fetch(path, { method: 'POST' });
+  return response.json();
+}
+
+$('reload').addEventListener('click', async () => {
+  $('reload').disabled = true;
+  $('message').textContent = 'Compilation…';
+  const answer = await post('/sim/reload');
+  $('message').textContent = answer.ok ? '' : answer.message;
+  $('reload').disabled = false;
+  // The phone page restarts its polling by itself, and sees the robot restart.
+});
+$('place').addEventListener('click', () => { trail = []; post('/sim/place'); });
+$('obstacle').addEventListener('click', () => post(`/sim/obstacle?present=${state.pose.obstacle ? 0 : 1}`));
+for (const sensor of ['front', 'side']) {
+  $(sensor).addEventListener('change', () => post(`/sim/unplug?sensor=${sensor}&unplugged=${$(sensor).checked ? 1 : 0}`));
+}
+
+poll();
+draw();
+</script>
+</body>
+</html>

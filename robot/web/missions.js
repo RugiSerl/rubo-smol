@@ -2,7 +2,7 @@
  * Missions run on the phone, using polled telemetry from the robot.
  *
  * Each entry appears under "Missions sur le téléphone" and takes the page's
- * { speed, duration, distance } settings. Try edits with fakerobot.js at
+ * { speed, duration, distance } settings. Try edits with simrobot.js at
  * http://localhost:8080/; reflash firmware to try them on the real robot.
  */
 
@@ -21,23 +21,3 @@ export const missions = {
       .pause(300)
       .backward(speed, duration),
 };
-
-// Try this:
-//
-//  Add each one to `missions` above, with the name given. Try it against the
-//  fake robot first: it costs a reload, not a reflash.
-//
-//   1. 'avancer-tourner': forward for `duration`, then a quarter turn to the
-//      right. How long is a quarter turn? Measure it on the floor: the fake
-//      robot cannot tell you.
-//
-//   2. 'avancer-obstacle': forward in five steps of `duration`, stopping as
-//      soon as the front sensor reads less than `distance`. Use stopWhen().
-//      Then read your condition again: what does it do when the sensor
-//      reports front_mm: -1?
-//
-//      The fake robot's wall is always about 500 mm away, so set the page's
-//      "arrêt à" slider above 500 to see the stop happen.
-//
-//   3. 'carre': four times (forward, quarter turn), cut short if something
-//      is in the way. repeat() copies every step built so far.

@@ -1,11 +1,11 @@
 {
   "name": "pico-robot-client",
   "version": "1.0.0",
-  "description": "Drive the Pico robot from Node.js, and a fake robot to test the phone page against.",
+  "description": "Drive the Pico robot from Node.js, and a simulated robot to test the phone page against.",
   "main": "remote.js",
   "scripts": {
     "demo": "node remote.js",
-    "fake": "node fakerobot.js"
+    "sim": "node simrobot.js"
   },
   "optionalDependencies": {
     "serialport": "^12.0.0"

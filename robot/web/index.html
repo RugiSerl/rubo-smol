@@ -371,30 +371,3 @@ hello();
 </script>
 </body>
 </html>
-<!-- Try this:
- Work against the fake robot (node client/fakerobot.js, then
- http://localhost:8080/): it reads this file from disk on every reload.
- Flash the robot only once it works there.
-
-  1. DISTANCE CURVE. Draw front_mm over the last ten seconds on a <canvas>,
-     one point per telemetry line. Leave a gap where front_ok is false rather
-     than drawing -1: a line dropping to the bottom of the chart looks like
-     a wall appearing.
-
-  2. DELAY HISTORY. Draw bot.latency.request and bot.latency.loop over time,
-     on the same scale. Walk away from the access point with the phone and
-     watch. Which of the two changes, and why does the other one hardly move?
-
-  3. PULSE MODE. Holding a button is good for driving, bad for measuring. Add
-     a duration slider (100 to 5000 ms) and a way to send ONE movement of
-     exactly that duration per tap. Then drive 1000 ms at speed 200 three
-     times and measure the distance with a ruler: is it the same each time?
-
-  4. A ROBOT THAT RESTARTS, OR STOPS ANSWERING. Today the page greys out a dot
-     and carries on. Make it obvious: grey out the driving and mission
-     buttons while bot.connected is false, and say so in large letters. When
-     a {restarted: true} message arrives, say that too. Test both with the
-     fake robot: stop it with ctrl-C, then start it again. What had the
-     robot forgotten when it restarted, and where does the page send it
-     again?
--->

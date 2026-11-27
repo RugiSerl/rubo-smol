@@ -26,7 +26,7 @@
  *                                        since line N, one per line
  *
  * Both transports carry the same newline-delimited JSON protocol. Try the
- * routes from a computer on the same network or with client/fakerobot.js:
+ * routes from a computer on the same network or with client/simrobot.js:
  *
  *     curl -d '{"left":200,"right":200}' http://<robot-ip>/api/command
  *     curl http://<robot-ip>/api/lines
@@ -47,6 +47,12 @@ public:
     if (cyw43_arch_init() != 0) return false;
     cyw43_arch_enable_sta_mode();   // join a network, do not create one
 
+    // The SDK turns on power saving by default: the chip sleeps between
+    // beacons and the access point holds our packets until it wakes. Requests
+    // arrive late or not at all, and the page sees the link drop. The radio
+    // draws a few tens of mA more without it, little next to the motors.
+    cyw43_wifi_pm(&cyw43_state, CYW43_NONE_PM);
+
     // This is the one place the robot is allowed to sit and wait, because
     // nothing can move until it finishes: the motors are off and the main
     // loop has not started yet.
@@ -65,10 +71,14 @@ public:
   // free for the next one.
   void poll() override {
     cyw43_arch_poll();
+    keepLinkUp();
 
     for (Connection& c : _connections) {
       if (!c.pcb) continue;
-      if (c.closing || (!c.responding && nowMs() - c.lastActiveMs > IDLE_CLOSE_MS)) {
+      uint32_t quietMs = nowMs() - c.lastActiveMs;
+      if (c.responding && quietMs > STALL_ABORT_MS) {
+        abortConnection(c);
+      } else if (c.closing || (!c.responding && quietMs > IDLE_CLOSE_MS)) {
         closeConnection(c);
       }
     }
@@ -116,6 +126,8 @@ private:
   static const uint32_t CONNECT_TIMEOUT_MS = 20000;  // give up joining after 20 s
   static const int      MAX_CONNECTIONS    = 8;      // two phones loading the page
   static const uint32_t IDLE_CLOSE_MS      = 10000;  // a quiet browser loses its slot
+  static const uint32_t STALL_ABORT_MS     = 5000;   // an answer nobody acknowledges
+  static const uint32_t REJOIN_AFTER_MS    = 10000;  // link down this long: join again
   static const int      LINES_KEPT         = 16;     // 1.6 s of telemetry at 100 ms
   static const int      COMMANDS_KEPT      = 8;
   static const size_t   HEAD_MAX           = 256;
@@ -144,6 +156,33 @@ private:
     tcp_arg(_listener, this);
     tcp_accept(_listener, onAccept);
     return true;
+  }
+
+  // The driver does not join again by itself. After the access point drops
+  // the robot (out of range, access point restarted, too many lost frames),
+  // the link stays down until a reboot. So: once it has been down for
+  // REJOIN_AFTER_MS, start a join, and another one every REJOIN_AFTER_MS
+  // until the link is back. The join runs in the background, inside
+  // cyw43_arch_poll(); the listener is bound to any address, so it survives
+  // and DHCP may hand back a different address.
+  void keepLinkUp() {
+    bool up = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_UP;
+
+    if (up != _linkUp) {
+      _linkUp = up;
+      if (up) {
+        printf("[wifi] link up: %s\n", describe());
+      } else {
+        printf("[wifi] link lost\n");
+        _linkDownMs = nowMs();
+      }
+    }
+    if (up || nowMs() - _linkDownMs < REJOIN_AFTER_MS) return;
+
+    printf("[wifi] joining %s again (status %d)\n", WIFI_SSID,
+           cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA));
+    cyw43_arch_wifi_connect_async(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
+    _linkDownMs = nowMs();
   }
 
   /** One browser connection, and the response it is being sent. */
@@ -187,6 +226,9 @@ private:
 
   bool            _heardFrom     = false;
   uint32_t        _lastRequestMs = 0;
+
+  bool            _linkUp        = false;   // as last seen by keepLinkUp()
+  uint32_t        _linkDownMs    = 0;       // when it went down, or the last join attempt
 
   uint32_t        _lastCaptureMs = 0;
   static const uint32_t MIN_CAPTURE_INTERVAL_MS = 1000;
@@ -402,6 +444,23 @@ private:
       c.closing = true;
       return;
     }
+    c.pcb        = nullptr;
+    c.responding = false;
+    c.closing    = false;
+  }
+
+  // For an answer the phone has stopped acknowledging: it walked out of range
+  // or was put away mid-transfer. tcp_close() would keep resending the unsent
+  // part for minutes, holding the slot and lwIP memory; tcp_abort() frees both
+  // now and sends the phone a reset.
+  void abortConnection(Connection& c) {
+    if (!c.pcb) return;
+    tcp_arg(c.pcb, nullptr);
+    tcp_recv(c.pcb, nullptr);
+    tcp_sent(c.pcb, nullptr);
+    tcp_err(c.pcb, nullptr);
+    tcp_poll(c.pcb, nullptr, 0);
+    tcp_abort(c.pcb);
     c.pcb        = nullptr;
     c.responding = false;
     c.closing    = false;

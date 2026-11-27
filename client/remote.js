@@ -18,7 +18,7 @@
  *
  *     node client/remote.js 192.168.1.42       // over WiFi
  *     node client/remote.js /dev/ttyACM0       // over the USB cable
- *     node client/remote.js localhost:8080     // against client/fakerobot.js
+ *     node client/remote.js localhost:8080     // against client/simrobot.js
  *
  * Robot.open() selects the transport by address or serial path. HTTP uses
  * the routes in robot/WebRadio.h and Node's built-in fetch(); USB needs the
@@ -122,8 +122,8 @@ class SerialTransport extends EventEmitter {
         // debugging. One wire, two jobs. Messages are JSON objects, so a line
         // that does not start with '{' is not for us.
         //
-        // This is a deliberate compromise, not an oversight: see the TRY THIS
-        // at the bottom of robot/Radio.h for what doing it properly costs.
+        // Sending the debug output to a hardware UART instead would take GP0
+        // and GP1, which the camera uses.
         if (!line) continue;
         if (!line.startsWith('{')) { this.emit('noise', line); continue; }
         this.emit('line', line);

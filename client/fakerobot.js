@@ -1,30 +1,19 @@
 'use strict';
 
 /**
- * Local HTTP simulator for the robot protocol and phone page.
+ * A robot with no firmware behind it, for `node client/simrobot.js
+ * --sans-firmware`: the page can be worked on even while robot/Robot.h does
+ * not compile.
  *
- * Serves robot/web/ and implements POST /api/command and GET /api/lines.
  * Commands, movement deadlines, telemetry and link timeout mirror the
- * firmware; distance readings are simulated.
- *
- *     node client/fakerobot.js [--http-port 8000] [--quiet]
- *     node client/remote.js localhost:8080
+ * firmware; its distance readings are invented, and its wheels move nothing.
  */
-
-const fs = require('fs');
-const http = require('http');
-const path = require('path');
 
 // Match the defaults in robot/Config.h.
 const DEFAULT_DURATION_MS = 1000;
 const MAX_DURATION_MS = 5000;
 const DEFAULT_TELEMETRY_MS = 200;
 const MOTOR_MAX_SPEED = 255;
-const WEB_TIMEOUT_MS = 1500;
-const HTTP_PORT = 8080;          // the robot uses 80, which needs root here
-const LINES_KEPT = 16;           // as in robot/WebRadio.h
-
-const WEB_DIR = path.join(__dirname, '..', 'robot', 'web');
 
 const started = Date.now();
 
@@ -188,122 +177,92 @@ function inventedDistance(name) {
   };
 }
 
-/** Parses one line the way the firmware does; returns [command] or [null, error line]. */
+// As in robot/Json.h and robot/Radio.h.
+const MAX_FIELDS = 12;
+const MAX_KEY = 16;
+const MAX_LINE = 256;
+const LONG_MAX = 2147483647;     // long is 32 bits on the Pico: strtol saturates here
+const LONG_MIN = -2147483648;
+
+/**
+ * JsonReader::parse() from robot/Json.h, step for step, so that a line the
+ * robot refuses is refused here too. Returns an object of whole numbers, or
+ * null where the robot answers "that was not valid JSON":
+ *
+ *     {"left":90.5}          null: the robot refuses fractions
+ *     {"stop":"true"}        {stop: 0}: a string is 0, so this does not stop
+ *     {"a":{"b":1}}          null: no nested objects or arrays
+ *     {"left":1}}            {left: 1}: anything after the first } is ignored
+ */
+function parseLikeFirmware(text) {
+  const fields = Object.create(null);
+  let count = 0;
+  let p = 0;
+  const at = () => text[p];
+  const skipSpaces = () => { while (' \t\r\n'.includes(text[p]) && p < text.length) p++; };
+  const isDigit = (c) => c !== undefined && c >= '0' && c <= '9';
+
+  skipSpaces();
+  if (at() !== '{') return null;
+  p++;
+  skipSpaces();
+  if (at() === '}') return fields;
+
+  for (;;) {
+    skipSpaces();
+    if (at() !== '"') return null;
+    p++;
+    const keyStart = p;
+    while (p < text.length && at() !== '"') p++;
+    if (at() !== '"') return null;
+    const key = text.slice(keyStart, p).slice(0, MAX_KEY - 1);
+    p++;
+    skipSpaces();
+    if (at() !== ':') return null;
+    p++;
+    skipSpaces();
+
+    let store = true;
+    let value = 0;
+    if (at() === '-' || isDigit(at())) {
+      // strtol(p, &end, 10): an optional sign, then at least one digit.
+      const match = /^-?[0-9]+/.exec(text.slice(p));
+      if (!match) return null;
+      value = Math.max(LONG_MIN, Math.min(LONG_MAX, Number(match[0])));
+      p += match[0].length;
+      if (at() === '.') return null;
+    } else if (text.startsWith('true', p)) {
+      value = 1; p += 4;
+    } else if (text.startsWith('false', p)) {
+      value = 0; p += 5;
+    } else if (text.startsWith('null', p)) {
+      store = false; p += 4;
+    } else if (at() === '"') {
+      p++;
+      while (p < text.length && at() !== '"') { if (at() === '\\' && p + 1 < text.length) p++; p++; }
+      if (at() !== '"') return null;
+      p++;
+    } else {
+      return null;
+    }
+
+    if (store && (key in fields || count++ < MAX_FIELDS)) fields[key] = value;
+
+    skipSpaces();
+    if (at() === ',') { p++; continue; }
+    if (at() === '}') return fields;
+    return null;
+  }
+}
+
+/**
+ * Parses one line the way the firmware does; returns [command] or [null, error line].
+ * The robot keeps MAX_LINE - 1 characters of a line, as WebRadio.h does.
+ */
 function parseCommand(line) {
-  try {
-    const command = JSON.parse(line);
-    if (typeof command !== 'object' || command === null || Array.isArray(command)) {
-      throw new Error('not an object');
-    }
-    return [command, null];
-  } catch (error) {
-    return [null, JSON.stringify({ error: 'that was not valid JSON' })];
-  }
+  const command = parseLikeFirmware(line.slice(0, MAX_LINE - 1));
+  if (command === null) return [null, JSON.stringify({ error: 'that was not valid JSON' })];
+  return [command, null];
 }
 
-function serve(httpPort, verbose) {
-  const robot = new FakeRobot(verbose);
-
-  // Numbered outgoing lines, as in WebRadio.h.
-  const kept = [];
-  let lastId = 0;
-  let webHeardAt = null;
-
-  const send = (lines) => {
-    for (const line of lines) {
-      lastId += 1;
-      kept.push({ id: lastId, text: line });
-      if (kept.length > LINES_KEPT) kept.shift();
-    }
-  };
-
-  const connected = () => webHeardAt !== null && nowMs() - webHeardAt < WEB_TIMEOUT_MS;
-
-  const web = http.createServer((request, response) => {
-    webHeardAt = nowMs();
-    const url = new URL(request.url, 'http://robot');
-    const plain = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' };
-
-    if (request.method === 'POST' && url.pathname === '/api/command') {
-      let body = '';
-      request.setEncoding('utf8');
-      request.on('data', (chunk) => { body += chunk; });
-      request.on('end', () => {
-        const replies = [];
-        for (const raw of body.split('\n')) {
-          const line = raw.trim();
-          if (!line) continue;
-          const [command, error] = parseCommand(line);
-          if (error) { replies.push(error); continue; }
-          replies.push(...robot.execute(command));
-        }
-        send(replies);
-        response.writeHead(204, { 'Cache-Control': 'no-store' });
-        response.end();
-      });
-      return;
-    }
-
-    if (request.method === 'GET' && url.pathname === '/api/lines') {
-      let after = Number(url.searchParams.get('after')) || 0;
-      if (after > lastId) after = 0;          // the robot "restarted"
-      const lines = kept.filter((line) => line.id > after).map((line) => line.text + '\n');
-      response.writeHead(200, { ...plain, 'X-Last-Line': String(lastId) });
-      response.end(lines.join(''));
-      return;
-    }
-
-    if (request.method === 'GET') {
-      const name = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
-      const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
-      // Serve current files on every request.
-      if (!name.includes('/') && !name.startsWith('.')) {
-        fs.readFile(path.join(WEB_DIR, name), (error, data) => {
-          if (error) {
-            response.writeHead(404, plain);
-            response.end('nothing here\n');
-            return;
-          }
-          const type = types[path.extname(name)] || 'application/octet-stream';
-          response.writeHead(200, { 'Content-Type': type + '; charset=utf-8',
-                                    'Cache-Control': 'no-store' });
-          response.end(data);
-        });
-        return;
-      }
-    }
-
-    response.writeHead(404, plain);
-    response.end('nothing here\n');
-  });
-
-  web.listen(httpPort, () => {
-    console.log(`fake robot: phone page on http://localhost:${httpPort}/ -- ctrl-C to stop\n`);
-  });
-
-  // Advance simulated movement every 5 ms.
-  setInterval(() => send(robot.update(connected())), 5);
-
-  process.on('SIGINT', () => {
-    console.log('\nstopped');
-    process.exit(0);
-  });
-}
-
-function main() {
-  const args = process.argv.slice(2);
-  const httpAt = args.indexOf('--http-port');
-  const httpPort = httpAt >= 0 ? Number(args[httpAt + 1]) : HTTP_PORT;
-  const verbose = !args.includes('--quiet');
-
-  if (!Number.isFinite(httpPort) || httpPort <= 0) {
-    console.error('usage: node client/fakerobot.js [--http-port N] [--quiet]');
-    process.exit(1);
-  }
-
-  serve(httpPort, verbose);
-}
-
-if (require.main === module) main();
-
-module.exports = { FakeRobot, nowMs };
+module.exports = { FakeRobot, nowMs, parseCommand, MAX_LINE };
